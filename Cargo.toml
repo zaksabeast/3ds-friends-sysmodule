@@ -1,0 +1,28 @@
+[package]
+name = "friends_sysmodule"
+version = "0.1.0"
+authors = ["zaksabeast <19464008+zaksabeast@users.noreply.github.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+base64 = { version = "0.13", default-features = false, features = ["alloc"] }
+cstr_core = "0.2"
+ctr = { package = "libctr-rs", git = "https://github.com/zaksabeast/libctr-rs", rev = "6a97349" }
+lazy_static = { version = "1.4.0", default-features = false, features = ["spin_no_std"] }
+num_enum = { version = "0.5", default-features = false }
+safe-transmute = { version = "0.11", default-features = false }
+sha1 = "0.6"
+
+[dev-dependencies]
+mocktopus = "0.7.11"
+
+[target.'cfg(target_os = "horizon")'.dependencies]
+linked_list_allocator = "0.9.0"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+lto = true
+panic = "abort"
