@@ -15,7 +15,7 @@ use num_enum::{FromPrimitive, IntoPrimitive};
 enum FrdACommand {
     #[num_enum(default)]
     InvalidCommand = 0,
-    SetLocalAccountIdAndServerInfo = 0x401,
+    CreateLocalAccount = 0x401,
     DeleteConfig = 0x402,
     SetLocalAccountId = 0x403,
     ResetAccountConfig = 0x404,
@@ -45,14 +45,13 @@ pub fn handle_frda_request(
     }
 
     match command_id.into() {
-        FrdACommand::SetLocalAccountIdAndServerInfo => {
+        FrdACommand::CreateLocalAccount => {
             let _local_account_id = command_parser.pop();
             let _nasc_environment = command_parser.pop();
             let _server_type_field_1 = command_parser.pop();
             let _server_type_field_2 = command_parser.pop();
 
-            let mut command =
-                ThreadCommandBuilder::new(FrdACommand::SetLocalAccountIdAndServerInfo);
+            let mut command = ThreadCommandBuilder::new(FrdACommand::CreateLocalAccount);
             command.push(GenericResultCode::Success);
             Ok(command.build())
         }
@@ -100,7 +99,7 @@ mod test {
         #[test]
         fn returns_success() {
             let mut context = FriendServiceContext::new().unwrap();
-            let command = ThreadCommandBuilder::new(FrdACommand::SetLocalAccountIdAndServerInfo);
+            let command = ThreadCommandBuilder::new(FrdACommand::CreateLocalAccount);
 
             let mut result: ThreadCommandParser =
                 handle_frda_request(&mut context, command.build().into(), 0)
@@ -108,7 +107,7 @@ mod test {
                     .into();
 
             assert_eq!(
-                result.validate_header(FrdACommand::SetLocalAccountIdAndServerInfo, 1, 0),
+                result.validate_header(FrdACommand::CreateLocalAccount, 1, 0),
                 Ok(())
             );
             assert_eq!(
