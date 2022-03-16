@@ -7,7 +7,7 @@ use core::convert::From;
 use ctr::{
     ac::AcController,
     ipc::{ThreadCommandBuilder, ThreadCommandParser},
-    result::GenericResultCode,
+    result::ResultCode,
     svc,
     sysmodule::server::RequestHandlerResult,
 };
@@ -37,7 +37,7 @@ pub fn handle_frdn_request(
             let raw_event_handle = unsafe { context.ndm_wifi_event_handle.get_raw() };
 
             let mut command = ThreadCommandBuilder::new(FrdNCommand::GetWiFiEvent);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_raw_handle(raw_event_handle);
 
             Ok(command.build())
@@ -64,14 +64,14 @@ pub fn handle_frdn_request(
             }
 
             let mut command = ThreadCommandBuilder::new(FrdNCommand::DisconnectFromWiFi);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdNCommand::GetWiFiState => {
             let result = get_wifi_state(context.ndm_wifi_state, context.wifi_connection_status);
 
             let mut command = ThreadCommandBuilder::new(FrdNCommand::GetWiFiState);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(result);
             Ok(command.build())
         }
@@ -104,10 +104,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiEvent, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop_handle().unwrap(), context.ndm_wifi_event_handle);
         }
     }
@@ -132,22 +129,19 @@ mod test {
                 result.validate_header(FrdNCommand::ConnectToWiFi, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
 
         #[test]
         fn should_return_an_error_if_connecting_is_not_successful() {
-            connect_to_wifi.mock_safe(|_| MockResult::Return(Err(1234)));
+            connect_to_wifi.mock_safe(|_| MockResult::Return(Err(ResultCode::from(-1))));
 
             let mut context = FriendServiceContext::new().unwrap();
             let command = ThreadCommandBuilder::new(FrdNCommand::ConnectToWiFi);
 
             let result = handle_frdn_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, 1234);
+            assert_eq!(result, ResultCode::from(-1));
         }
     }
 
@@ -173,10 +167,7 @@ mod test {
                 result.validate_header(FrdNCommand::DisconnectFromWiFi, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(context.ndm_wifi_state, 0);
         }
 
@@ -198,10 +189,7 @@ mod test {
                 result.validate_header(FrdNCommand::DisconnectFromWiFi, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(context.wifi_connection_status, WiFiConnectionStatus::Idle);
         }
 
@@ -225,10 +213,7 @@ mod test {
                 result.validate_header(FrdNCommand::DisconnectFromWiFi, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
 
         #[test]
@@ -251,10 +236,7 @@ mod test {
                 result.validate_header(FrdNCommand::DisconnectFromWiFi, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
 
         #[test]
@@ -277,10 +259,7 @@ mod test {
                 result.validate_header(FrdNCommand::DisconnectFromWiFi, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
     }
 
@@ -303,10 +282,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
         }
 
@@ -326,10 +302,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
         }
 
@@ -350,10 +323,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
         }
 
@@ -373,10 +343,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 3);
         }
 
@@ -396,10 +363,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
         }
 
@@ -419,10 +383,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
         }
 
@@ -443,10 +404,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
         }
 
@@ -466,10 +424,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 3);
         }
 
@@ -489,10 +444,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
         }
 
@@ -512,10 +464,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
         }
 
@@ -536,10 +485,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
         }
 
@@ -559,10 +505,7 @@ mod test {
                 result.validate_header(FrdNCommand::GetWiFiState, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 1);
         }
     }
@@ -586,7 +529,7 @@ mod test {
             );
             assert_eq!(
                 result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidCommand.into()
+                FrdErrorCode::InvalidCommand.into_result_code()
             );
         }
     }

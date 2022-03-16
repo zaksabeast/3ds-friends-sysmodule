@@ -156,7 +156,7 @@ mod test {
                 // This is safe since it's just a test and the handle won't be duplicated.
                 let raw_handle = unsafe { handle.get_raw() };
                 assert_eq!(raw_handle, raw_event_handle);
-                MockResult::Return(Ok(0))
+                MockResult::Return(Ok(()))
             });
 
             let mut context = FriendServiceContext::new().unwrap();
@@ -197,6 +197,7 @@ mod test {
 
     mod connect_to_wifi {
         use super::*;
+        use ctr::result::ResultCode;
         use mocktopus::mocking::{MockResult, Mockable};
 
         #[test]
@@ -208,7 +209,7 @@ mod test {
                 // This is safe since it's just a test and the handle won't be duplicated.
                 let raw_handle = unsafe { handle.get_raw() };
                 assert_eq!(raw_handle, raw_event_handle);
-                MockResult::Return(Ok(0))
+                MockResult::Return(Ok(()))
             });
 
             let mut context = FriendServiceContext::new().unwrap();
@@ -238,7 +239,7 @@ mod test {
 
         #[test]
         fn should_set_the_wifi_status_to_idle_if_connecting_is_not_successful() {
-            AcController::quick_connect.mock_safe(|| MockResult::Return(Err(-1)));
+            AcController::quick_connect.mock_safe(|| MockResult::Return(Err(ResultCode::from(-1))));
 
             let mut context = FriendServiceContext::new().unwrap();
             context.ndm_wifi_state = 2;

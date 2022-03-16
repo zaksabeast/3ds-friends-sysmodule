@@ -15,7 +15,7 @@ use ctr::{
         TrivialCharacterSet,
     },
     ipc::{ThreadCommandBuilder, ThreadCommandParser},
-    result::GenericResultCode,
+    result::{GenericResultCode, ResultCode},
     svc,
     sysmodule::server::RequestHandlerResult,
     time::calculate_time_difference_from_now,
@@ -95,13 +95,13 @@ pub fn handle_frdu_request(
     match command_id.into() {
         FrdUCommand::HasLoggedIn => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::HasLoggedIn);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(true);
             Ok(command.build())
         }
         FrdUCommand::IsOnline => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::IsOnline);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(true);
             Ok(command.build())
         }
@@ -111,12 +111,12 @@ pub fn handle_frdu_request(
             }
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::Login);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::Logout => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::Logout);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetMyFriendKey => {
@@ -127,13 +127,13 @@ pub fn handle_frdu_request(
             };
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyFriendKey);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_struct(&friend_key);
             Ok(command.build())
         }
         FrdUCommand::GetMyPreference => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyPreference);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(context.my_data.is_public_mode);
             command.push(context.my_data.is_show_game_mode);
             command.push(context.my_data.is_show_played_game);
@@ -141,7 +141,7 @@ pub fn handle_frdu_request(
         }
         FrdUCommand::GetMyProfile => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyProfile);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_struct(&context.my_data.profile);
             Ok(command.build())
         }
@@ -150,7 +150,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &[presense]);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyPresence);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -167,26 +167,26 @@ pub fn handle_frdu_request(
                 });
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyScreenName);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_struct(&screen_name);
             Ok(command.build())
         }
         FrdUCommand::GetMyMii => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyMii);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_struct(&context.my_data.mii);
             Ok(command.build())
         }
         FrdUCommand::GetMyLocalAccountId => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyLocalAccountId);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(context.account_config.local_account_id);
             Ok(command.build())
         }
         FrdUCommand::GetMyPlayingGame => {
             let playing_game = context.my_online_activity.playing_game;
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyPlayingGame);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_u64(playing_game.title_id);
             command.push(playing_game.version);
             command.push(playing_game.unk);
@@ -194,7 +194,7 @@ pub fn handle_frdu_request(
         }
         FrdUCommand::GetMyFavoriteGame => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyFavoriteGame);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_u64(context.my_data.my_favorite_game.title_id);
             command.push(context.my_data.my_favorite_game.version);
             command.push(0u32); // unknown
@@ -202,7 +202,7 @@ pub fn handle_frdu_request(
         }
         FrdUCommand::GetMyNcPrincipalId => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyNcPrincipalId);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(context.my_data.my_nc_principal_id);
             Ok(command.build())
         }
@@ -219,7 +219,7 @@ pub fn handle_frdu_request(
                 });
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyComment);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_struct(&comment_shorts);
             Ok(command.build())
         }
@@ -233,7 +233,7 @@ pub fn handle_frdu_request(
                 context.copy_into_session_static_buffer(session_index, c_password_bytes);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyPassword);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -249,7 +249,7 @@ pub fn handle_frdu_request(
             let sliced_friend_keys = &friend_keys[start..end];
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendKeyList);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(sliced_friend_keys.len() as u32);
             command.push_static_buffer(sliced_friend_keys, 0);
             Ok(command.build())
@@ -271,7 +271,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendPresence);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -322,7 +322,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendScreenName);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(&static_buffer[..screen_name_buffer_length], 0);
             command.push_static_buffer(&static_buffer[screen_name_buffer_length..], 1);
             Ok(command.build())
@@ -359,7 +359,7 @@ pub fn handle_frdu_request(
                 });
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendMii);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             unsafe { command.push_raw_write_buffer(friend_miis_pointer, out_count) };
             Ok(command.build())
         }
@@ -385,7 +385,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendProfile);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -411,7 +411,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendRelationship);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -436,7 +436,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendAttributeFlags);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -464,7 +464,7 @@ pub fn handle_frdu_request(
                 });
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendPlayingGame);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             // This is safe since we're forwarding kernel translated data back to the client
             unsafe { command.push_raw_write_buffer(game_keys_pointer, out_count) };
             Ok(command.build())
@@ -491,7 +491,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendFavoriteGame);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -534,7 +534,7 @@ pub fn handle_frdu_request(
                     out_size += 1;
                 });
 
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             // This is safe since we're forwarding kernel translated data back to the client
             unsafe { command.push_raw_write_buffer(friend_info_out_pointer, out_size) };
             Ok(command.build())
@@ -548,7 +548,7 @@ pub fn handle_frdu_request(
                 .any(|friend| friend.friend_key.local_friend_code == friend_code);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::IsIncludedInFriendList);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(has_friend);
             Ok(command.build())
         }
@@ -582,13 +582,13 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::UnscrambleLocalFriendCode);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
         FrdUCommand::UpdateGameModeDescription => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::UpdateGameModeDescription);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::UpdateGameMode => {
@@ -598,7 +598,7 @@ pub fn handle_frdu_request(
         }
         FrdUCommand::SendInvitation => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::SendInvitation);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::AttachToEventNotification => {
@@ -608,14 +608,14 @@ pub fn handle_frdu_request(
             context.session_contexts[session_index].client_event = Some(client_event);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::AttachToEventNotification);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::SetNotificationMask => {
             context.session_contexts[session_index].notification_mask = command_parser.pop();
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::SetNotificationMask);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetEventNotification => {
@@ -643,7 +643,7 @@ pub fn handle_frdu_request(
             client_event_queue.clear();
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetEventNotification);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(0u32); // unknown
             command.push(out_count as u32);
             // This is safe since we're forwarding kernel translated data back to the client
@@ -652,7 +652,7 @@ pub fn handle_frdu_request(
         }
         FrdUCommand::GetLastResponseResult => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetLastResponseResult);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::PrincipalIdToFriendCode => {
@@ -663,7 +663,7 @@ pub fn handle_frdu_request(
 
             match friend_code_result {
                 Ok(friend_code) => {
-                    command.push(GenericResultCode::Success);
+                    command.push(ResultCode::success());
                     command.push_u64(friend_code);
                 }
                 Err(error_code) => {
@@ -681,7 +681,7 @@ pub fn handle_frdu_request(
 
             match principal_id_result {
                 Ok(principal_id) => {
-                    command.push(GenericResultCode::Success);
+                    command.push(ResultCode::success());
                     command.push(principal_id);
                 }
                 Err(error_code) => {
@@ -696,7 +696,7 @@ pub fn handle_frdu_request(
             let is_valid = utils::validate_friend_code(friend_code);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::IsValidFriendCode);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(is_valid);
             Ok(command.build())
         }
@@ -709,19 +709,19 @@ pub fn handle_frdu_request(
                 command.push(FrdErrorCode::InvalidErrorCode);
                 command.push(0u32);
             } else if result_code > -1 {
-                command.push(GenericResultCode::Success);
+                command.push(ResultCode::success());
                 command.push(0u32);
             } else if (result_code & 0x3ff) == 0x101 {
                 // TODO:
                 // Incomplete, should return
                 // 0x59D8 + some value or 0x4E20 + some value
-                command.push(GenericResultCode::Success);
+                command.push(ResultCode::success());
                 command.push(0x59D8u32);
             } else {
                 // TODO:
                 // Incomplete, should return
                 // 0x2710 + some value
-                command.push(GenericResultCode::Success);
+                command.push(ResultCode::success());
                 command.push(0x2710u32);
             }
 
@@ -764,7 +764,7 @@ pub fn handle_frdu_request(
             svc::signal_event(&event_handle)?;
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::RequestGameAuthentication);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetGameAuthenticationData => {
@@ -775,7 +775,7 @@ pub fn handle_frdu_request(
 
             let game_auth_data = match last_game_authentication_response {
                 Some(last_game_authentication_response) => {
-                    command.push(GenericResultCode::Success);
+                    command.push(ResultCode::success());
                     last_game_authentication_response
                 }
                 None => {
@@ -835,7 +835,7 @@ pub fn handle_frdu_request(
             svc::signal_event(&event_handle)?;
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::RequestServiceLocator);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetServiceLocatorData => {
@@ -845,7 +845,7 @@ pub fn handle_frdu_request(
 
             let service_locate_data = match service_locator_response {
                 Some(service_locator_response) => {
-                    command.push(GenericResultCode::Success);
+                    command.push(ResultCode::success());
                     service_locator_response
                 }
                 None => {
@@ -869,14 +869,14 @@ pub fn handle_frdu_request(
             svc::signal_event(&event).unwrap();
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::DetectNatProperties);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetNatProperties => {
             let nat_properties = &context.nat_properties;
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetNatProperties);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(nat_properties.get_unk1());
             command.push(nat_properties.get_unk2());
             Ok(command.build())
@@ -885,18 +885,18 @@ pub fn handle_frdu_request(
             let server_time_interval = context.session_contexts[session_index].server_time_interval;
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetServerTimeInterval);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_u64(server_time_interval);
             Ok(command.build())
         }
         FrdUCommand::AllowHalfAwake => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::AllowHalfAwake);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetServerTypes => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetServerTypes);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(context.account_config.nasc_environment as u32);
             command.push(context.account_config.server_type_1);
             command.push(context.account_config.server_type_2);
@@ -927,7 +927,7 @@ pub fn handle_frdu_request(
             let static_buffer = context.copy_into_session_static_buffer(session_index, &result);
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetFriendComment);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push_static_buffer(static_buffer, 0);
             Ok(command.build())
         }
@@ -939,29 +939,29 @@ pub fn handle_frdu_request(
             session_context.process_id = command_parser.pop_and_validate_process_id()?;
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::SetClientSdkVersion);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetMyApproachContext => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetMyApproachContext);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::AddFriendWithApproach => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::AddFriendWithApproach);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::DecryptApproachContext => {
             let mut command = ThreadCommandBuilder::new(FrdUCommand::DecryptApproachContext);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdUCommand::GetExtendedNatProperties => {
             let nat_properties = &context.nat_properties;
 
             let mut command = ThreadCommandBuilder::new(FrdUCommand::GetExtendedNatProperties);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             command.push(nat_properties.get_unk1());
             command.push(nat_properties.get_unk2());
             command.push(nat_properties.get_unk3());
@@ -993,7 +993,7 @@ mod test {
                 // This is safe since it's a test, the handle isn't real and it won't be used for anything.
                 let raw_handle = unsafe { handle.get_raw() };
                 assert_eq!(raw_handle, mock_handle);
-                MockResult::Return(Ok(0))
+                MockResult::Return(Ok(()))
             });
 
             let mut context = FriendServiceContext::new().unwrap();
@@ -1006,10 +1006,7 @@ mod test {
                     .into();
 
             assert_eq!(result.validate_header(FrdUCommand::Login, 1, 0), Ok(()));
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
 
         #[test]
@@ -1029,10 +1026,7 @@ mod test {
                     .into();
 
             assert_eq!(result.validate_header(FrdUCommand::Login, 1, 0), Ok(()));
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
     }
 
@@ -1062,10 +1056,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyFriendKey, 5, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop_struct::<FriendKey>().unwrap(), friend_key);
         }
     }
@@ -1091,10 +1082,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyPreference, 4, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 1);
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 0);
@@ -1118,10 +1106,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyPreference, 4, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 1);
             assert_eq!(result.pop(), 0);
@@ -1145,10 +1130,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyPreference, 4, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 1);
@@ -1183,10 +1165,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyProfile, 3, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop_struct::<FriendProfile>().unwrap(), profile);
         }
     }
@@ -1213,10 +1192,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyPresence, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let presense: Vec<ExpandedFriendPresence> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1243,10 +1219,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyScreenName, 7, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_struct::<ScreenName>().unwrap(),
                 "Test User".into()
@@ -1269,10 +1242,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyScreenName, 7, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_struct::<ScreenName>().unwrap(),
                 "s.len == 11".into()
@@ -1295,10 +1265,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyScreenName, 7, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_struct::<ScreenName>().unwrap(),
                 "This is mor".into()
@@ -1332,10 +1299,7 @@ mod test {
                     .into();
 
             assert_eq!(result.validate_header(FrdUCommand::GetMyMii, 25, 0), Ok(()));
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop_struct::<Mii>().unwrap(), mii);
         }
     }
@@ -1359,10 +1323,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyLocalAccountId, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 1);
         }
     }
@@ -1392,10 +1353,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyFavoriteGame, 5, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop_struct::<GameKey>().unwrap(), game_key);
         }
     }
@@ -1419,10 +1377,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyNcPrincipalId, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0xaabbccdd);
         }
     }
@@ -1446,10 +1401,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyComment, 10, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_struct::<FriendComment>().unwrap(),
                 "Hello!".into()
@@ -1472,10 +1424,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyComment, 10, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_struct::<FriendComment>().unwrap(),
                 "This is 16 chars".into()
@@ -1498,10 +1447,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetMyComment, 10, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_struct::<FriendComment>().unwrap(),
                 "This is more tha".into()
@@ -1532,10 +1478,7 @@ mod test {
                 Ok(())
             );
             assert_eq!(result.validate_buffer_id(2, 0), Ok(()));
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 context.get_session_static_buffer(0),
                 vec![0x74, 0x65, 0x73, 0x74, 0x00]
@@ -1572,10 +1515,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendKeyList, 2, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 2);
 
             let result_friend_keys: Vec<FriendKey> =
@@ -1609,10 +1549,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendKeyList, 2, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 1);
 
             let result_friend_keys: Vec<FriendKey> =
@@ -1643,10 +1580,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendKeyList, 2, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 1);
 
             let result_friend_keys: Vec<FriendKey> =
@@ -1678,10 +1612,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendKeyList, 2, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
 
             let comments: Vec<FriendKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1707,10 +1638,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendKeyList, 2, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
 
             let comments: Vec<FriendKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1742,10 +1670,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPresence, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let presense: Vec<FriendPresence> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1773,10 +1698,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPresence, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let presense: Vec<FriendPresence> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1804,10 +1726,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPresence, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let presense: Vec<FriendPresence> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1834,10 +1753,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPresence, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let presense: Vec<FriendPresence> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1898,10 +1814,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendScreenName, 1, 4),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let screen_names: Vec<ScreenName> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -1965,10 +1878,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendScreenName, 1, 4),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let screen_names: Vec<ScreenName> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2026,10 +1936,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendScreenName, 1, 4),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let screen_names: Vec<ScreenName> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2087,10 +1994,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendScreenName, 1, 4),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let screen_names: Vec<ScreenName> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2148,10 +2052,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendScreenName, 1, 4),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let screen_names: Vec<ScreenName> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2192,10 +2093,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendScreenName, 1, 4),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let screen_names: Vec<ScreenName> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2259,10 +2157,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendMii, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let miis = unsafe { result.pop_mut_buffer::<Mii>().unwrap() };
             assert_eq!(miis.len(), out_miis.len());
@@ -2317,10 +2212,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendMii, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let miis = unsafe { result.pop_mut_buffer::<Mii>().unwrap() };
             assert_eq!(miis.len(), 1);
@@ -2375,10 +2267,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendMii, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let miis = unsafe { result.pop_mut_buffer::<Mii>().unwrap() };
             assert_eq!(miis.len(), 1);
@@ -2422,10 +2311,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendMii, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let miis = unsafe { result.pop_mut_buffer::<Mii>().unwrap() };
             assert_eq!(miis.len(), 100);
@@ -2465,10 +2351,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendMii, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let miis = unsafe { result.pop_mut_buffer::<Mii>().unwrap() };
             assert_eq!(miis.len(), 1);
@@ -2541,10 +2424,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendProfile, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<FriendProfile> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2612,10 +2492,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendProfile, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<FriendProfile> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2683,10 +2560,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendProfile, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<FriendProfile> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2718,10 +2592,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendProfile, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<FriendProfile> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2747,10 +2618,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendProfile, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<FriendProfile> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2806,10 +2674,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendRelationship, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_relationship: Vec<u8> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2831,7 +2696,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into())
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code())
         }
 
         #[test]
@@ -2849,7 +2714,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into())
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code())
         }
 
         #[test]
@@ -2866,7 +2731,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into())
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code())
         }
 
         #[test]
@@ -2911,10 +2776,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendRelationship, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_relationship: Vec<u8> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2957,10 +2819,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendRelationship, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_relationship: Vec<u8> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -2998,10 +2857,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendRelationship, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_relationship: Vec<u8> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -3057,10 +2913,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendAttributeFlags, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_attributes: Vec<u32> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -3082,7 +2935,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
 
         #[test]
@@ -3100,7 +2953,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
 
         #[test]
@@ -3117,7 +2970,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
 
         #[test]
@@ -3162,10 +3015,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendAttributeFlags, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_attributes: Vec<u32> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -3208,10 +3058,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendAttributeFlags, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_attributes: Vec<u32> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -3249,10 +3096,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendAttributeFlags, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_attributes: Vec<u32> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -3348,10 +3192,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendAttributeFlags, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_attributes: Vec<u32> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -3385,10 +3226,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPlayingGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let game_keys = unsafe { result.pop_mut_buffer::<GameKey>().unwrap() };
             assert_eq!(game_keys.len(), out_games.len());
@@ -3418,10 +3256,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPlayingGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let game_keys = unsafe { result.pop_mut_buffer::<GameKey>().unwrap() };
             assert_eq!(game_keys.len(), out_games.len());
@@ -3451,10 +3286,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPlayingGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let game_keys = unsafe { result.pop_mut_buffer::<GameKey>().unwrap() };
             assert_eq!(game_keys.len(), 1);
@@ -3484,10 +3316,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPlayingGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let game_keys = unsafe { result.pop_mut_buffer::<GameKey>().unwrap() };
             assert_eq!(game_keys.len(), 1);
@@ -3517,10 +3346,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendPlayingGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let game_keys = unsafe { result.pop_mut_buffer::<GameKey>().unwrap() };
             assert_eq!(game_keys.len(), 100);
@@ -3585,10 +3411,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendFavoriteGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<GameKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(
@@ -3647,10 +3470,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendFavoriteGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<GameKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(
@@ -3709,10 +3529,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendFavoriteGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<GameKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(profiles, vec![friend_1.favorite_game]);
@@ -3743,10 +3560,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendFavoriteGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<GameKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(profiles, vec![Default::default()]);
@@ -3771,10 +3585,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendFavoriteGame, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let profiles: Vec<GameKey> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(profiles, vec![Default::default(); 100]);
@@ -3815,10 +3626,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendInfo, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_and_validate_buffer(
                     2 * core::mem::size_of::<FriendInfo>(),
@@ -3878,10 +3686,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendInfo, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_and_validate_buffer(
                     2 * core::mem::size_of::<FriendInfo>(),
@@ -3917,10 +3722,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendInfo, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_and_validate_buffer(
                     core::mem::size_of::<FriendInfo>(),
@@ -3961,10 +3763,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendInfo, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 result.pop_and_validate_buffer(
                     core::mem::size_of::<FriendInfo>(),
@@ -3994,7 +3793,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, built_command.into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
 
         #[test]
@@ -4016,7 +3815,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, built_command.into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
 
         #[test]
@@ -4033,7 +3832,7 @@ mod test {
             command.push_write_buffer(&mut out);
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
     }
 
@@ -4067,10 +3866,7 @@ mod test {
                 result.validate_header(FrdUCommand::IsIncludedInFriendList, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop() != 0, true);
         }
 
@@ -4091,10 +3887,7 @@ mod test {
                 result.validate_header(FrdUCommand::IsIncludedInFriendList, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop() != 0, false);
         }
     }
@@ -4148,10 +3941,7 @@ mod test {
                 result.validate_header(FrdUCommand::UnscrambleLocalFriendCode, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_codes: Vec<u64> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(
@@ -4201,10 +3991,7 @@ mod test {
                 result.validate_header(FrdUCommand::UnscrambleLocalFriendCode, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_codes: Vec<u64> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(friend_codes, vec![friend_key_1.local_friend_code, 0]);
@@ -4253,10 +4040,7 @@ mod test {
                 result.validate_header(FrdUCommand::UnscrambleLocalFriendCode, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_codes: Vec<u64> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(friend_codes, vec![friend_key_1.local_friend_code,]);
@@ -4305,10 +4089,7 @@ mod test {
                 result.validate_header(FrdUCommand::UnscrambleLocalFriendCode, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_codes: Vec<u64> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(friend_codes, vec![friend_key_1.local_friend_code,]);
@@ -4340,10 +4121,7 @@ mod test {
                 result.validate_header(FrdUCommand::UnscrambleLocalFriendCode, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let friend_codes: Vec<u64> = unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(friend_codes, vec![0; 100]);
@@ -4374,10 +4152,7 @@ mod test {
                 result.validate_header(FrdUCommand::AttachToEventNotification, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 context.session_contexts[session_index].client_event,
                 Some(Handle::from(0xabcdu32))
@@ -4408,10 +4183,7 @@ mod test {
                 result.validate_header(FrdUCommand::SetNotificationMask, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(context.session_contexts[session_index].notification_mask, 1);
         }
     }
@@ -4452,10 +4224,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetEventNotification, 3, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 2);
 
@@ -4496,10 +4265,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetEventNotification, 3, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 1);
 
@@ -4537,10 +4303,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetEventNotification, 3, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 1);
 
@@ -4581,10 +4344,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetEventNotification, 3, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 1);
 
@@ -4647,10 +4407,7 @@ mod test {
                 result.validate_header(FrdUCommand::PrincipalIdToFriendCode, 3, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into(),
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0xaabbccdd);
             assert_eq!(result.pop(), 0x38);
         }
@@ -4673,7 +4430,7 @@ mod test {
             );
             assert_eq!(
                 result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidPrincipalId.into(),
+                FrdErrorCode::InvalidPrincipalId.into_result_code(),
             );
             assert_eq!(result.pop(), 0);
             assert_eq!(result.pop(), 0);
@@ -4700,10 +4457,7 @@ mod test {
                 result.validate_header(FrdUCommand::FriendCodeToPrincipalId, 2, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into(),
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0xaabbccdd);
         }
 
@@ -4725,7 +4479,7 @@ mod test {
             );
             assert_eq!(
                 result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidFriendCode.into(),
+                FrdErrorCode::InvalidFriendCode.into_result_code(),
             );
             assert_eq!(result.pop(), 0);
         }
@@ -4750,10 +4504,7 @@ mod test {
                 result.validate_header(FrdUCommand::IsValidFriendCode, 2, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into(),
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 1);
         }
 
@@ -4773,10 +4524,7 @@ mod test {
                 result.validate_header(FrdUCommand::IsValidFriendCode, 2, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into(),
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
         }
     }
@@ -4800,7 +4548,7 @@ mod test {
             );
             assert_eq!(
                 result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidErrorCode.into()
+                FrdErrorCode::InvalidErrorCode.into_result_code()
             );
             assert_eq!(result.pop(), 0);
         }
@@ -4820,10 +4568,7 @@ mod test {
                 result.validate_header(FrdUCommand::ResultToErrorCode, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0);
         }
 
@@ -4842,10 +4587,7 @@ mod test {
                 result.validate_header(FrdUCommand::ResultToErrorCode, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0x59d8);
         }
 
@@ -4864,10 +4606,7 @@ mod test {
                 result.validate_header(FrdUCommand::ResultToErrorCode, 2, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), 0x2710);
         }
     }
@@ -4931,10 +4670,7 @@ mod test {
                 result.validate_header(FrdUCommand::RequestGameAuthentication, 1, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into(),
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 context.session_contexts[session_index]
                     .last_game_authentication_response
@@ -4981,10 +4717,7 @@ mod test {
                 result.validate_header(FrdUCommand::RequestGameAuthentication, 1, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into(),
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
     }
 
@@ -5013,7 +4746,7 @@ mod test {
                 Ok(()),
             );
             assert_eq!(result.validate_buffer_id(2, 0), Ok(()));
-            assert_eq!(result.pop_result(), Ok(GenericResultCode::Success.into()));
+            assert_eq!(result.pop_result(), Ok(()));
             let game_auth_data: Vec<GameAuthenticationData> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(game_auth_data, vec![Default::default()])
@@ -5111,10 +4844,7 @@ mod test {
                 result.validate_header(FrdUCommand::RequestServiceLocator, 1, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 context.session_contexts[session_index]
                     .last_service_locator_response
@@ -5168,10 +4898,7 @@ mod test {
                 result.validate_header(FrdUCommand::RequestServiceLocator, 1, 0),
                 Ok(()),
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
 
         #[test]
@@ -5220,10 +4947,7 @@ mod test {
                 result.validate_header(FrdUCommand::RequestServiceLocator, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(
                 context.session_contexts[session_index].server_time_interval,
                 0xabcd,
@@ -5261,7 +4985,7 @@ mod test {
                 Ok(())
             );
             assert_eq!(result.validate_buffer_id(2, 0), Ok(()));
-            assert_eq!(result.pop_result(), Ok(GenericResultCode::Success.into()));
+            assert_eq!(result.pop_result(), Ok(()));
 
             let locate_data: Vec<ServiceLocateData> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -5306,7 +5030,7 @@ mod test {
                 // and it won't be used for anything.
                 let raw_handle = unsafe { handle.get_raw() };
                 assert_eq!(raw_handle, mock_handle);
-                MockResult::Return(Ok(0))
+                MockResult::Return(Ok(()))
             });
 
             let mut context = FriendServiceContext::new().unwrap();
@@ -5322,10 +5046,7 @@ mod test {
                 result.validate_header(FrdUCommand::DetectNatProperties, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
     }
 
@@ -5349,10 +5070,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetNatProperties, 3, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), context.nat_properties.get_unk1() as u32);
             assert_eq!(result.pop(), context.nat_properties.get_unk2() as u32);
         }
@@ -5380,10 +5098,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetServerTimeInterval, 3, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop_u64(), 0xaaaabbbbccccdddd);
         }
     }
@@ -5415,10 +5130,7 @@ mod test {
                 result.validate_header(FrdUCommand::SetClientSdkVersion, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             let session_context = &context.session_contexts[session_index];
             assert_eq!(session_context.client_sdk_version, 0xaabb);
@@ -5437,7 +5149,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidValue.into());
+            assert_eq!(result, GenericResultCode::InvalidValue.into_result_code());
         }
 
         #[test]
@@ -5452,7 +5164,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
 
         #[test]
@@ -5467,7 +5179,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into());
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code());
         }
     }
 
@@ -5493,10 +5205,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetServerTypes, 4, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), context.account_config.nasc_environment as u32);
             assert_eq!(result.pop(), context.account_config.server_type_1 as u32);
             assert_eq!(result.pop(), context.account_config.server_type_2 as u32);
@@ -5554,7 +5263,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendComment, 1, 2),
                 Ok(())
             );
-            assert_eq!(result.pop(), u32::from(GenericResultCode::Success));
+            assert_eq!(result.pop(), u32::from(ResultCode::success()));
 
             let comments: Vec<FriendComment> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
@@ -5575,7 +5284,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into())
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code())
         }
 
         #[test]
@@ -5593,7 +5302,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into())
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code())
         }
 
         #[test]
@@ -5611,7 +5320,7 @@ mod test {
 
             let result = handle_frdu_request(&mut context, command.build().into(), 0).unwrap_err();
 
-            assert_eq!(result, GenericResultCode::InvalidCommand.into())
+            assert_eq!(result, GenericResultCode::InvalidCommand.into_result_code())
         }
 
         #[test]
@@ -5657,10 +5366,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendComment, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             let comments: Vec<FriendComment> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(comments.len(), 1);
@@ -5704,10 +5410,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendComment, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             let comments: Vec<FriendComment> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(comments, vec!["Friend 1".into(), "".into()]);
@@ -5745,10 +5448,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetFriendComment, 1, 2),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             let comments: Vec<FriendComment> =
                 unsafe { result.pop_static_buffer().unwrap().to_vec() };
             assert_eq!(comments.len(), 100);
@@ -5775,10 +5475,7 @@ mod test {
                 result.validate_header(FrdUCommand::GetExtendedNatProperties, 4, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
             assert_eq!(result.pop(), context.nat_properties.get_unk1() as u32);
             assert_eq!(result.pop(), context.nat_properties.get_unk2() as u32);
             assert_eq!(result.pop(), context.nat_properties.get_unk3());
@@ -5804,7 +5501,7 @@ mod test {
             );
             assert_eq!(
                 result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidCommand.into()
+                FrdErrorCode::InvalidCommand.into_result_code()
             );
         }
     }

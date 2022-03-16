@@ -5,7 +5,7 @@ use core::convert::From;
 use ctr::{
     frd::GameKey,
     ipc::{ThreadCommandBuilder, ThreadCommandParser},
-    result::GenericResultCode,
+    result::ResultCode,
     sysmodule::server::RequestHandlerResult,
 };
 use num_enum::{FromPrimitive, IntoPrimitive};
@@ -52,12 +52,12 @@ pub fn handle_frda_request(
             let _server_type_field_2 = command_parser.pop();
 
             let mut command = ThreadCommandBuilder::new(FrdACommand::CreateLocalAccount);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdACommand::HasUserData => {
             let mut command = ThreadCommandBuilder::new(FrdACommand::HasUserData);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdACommand::SetPresenseGameKey => {
@@ -73,12 +73,12 @@ pub fn handle_frda_request(
             ));
 
             let mut command = ThreadCommandBuilder::new(FrdACommand::SetPresenseGameKey);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         FrdACommand::SetMyData => {
             let mut command = ThreadCommandBuilder::new(FrdACommand::SetMyData);
-            command.push(GenericResultCode::Success);
+            command.push(ResultCode::success());
             Ok(command.build())
         }
         _ => {
@@ -110,10 +110,7 @@ mod test {
                 result.validate_header(FrdACommand::CreateLocalAccount, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
     }
 
@@ -149,10 +146,7 @@ mod test {
                 result.validate_header(FrdACommand::SetPresenseGameKey, 1, 0),
                 Ok(())
             );
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
 
             assert_eq!(context.my_online_activity.playing_game, playing_game);
         }
@@ -172,10 +166,7 @@ mod test {
                     .into();
 
             assert_eq!(result.validate_header(FrdACommand::SetMyData, 1, 0), Ok(()));
-            assert_eq!(
-                result.pop_result().unwrap(),
-                GenericResultCode::Success.into()
-            );
+            assert_eq!(result.pop_result(), Ok(()));
         }
     }
 
@@ -198,7 +189,7 @@ mod test {
             );
             assert_eq!(
                 result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidCommand.into()
+                FrdErrorCode::InvalidCommand.into_result_code()
             );
         }
     }
