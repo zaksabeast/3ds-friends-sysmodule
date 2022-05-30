@@ -9,11 +9,12 @@ use crate::frd::{
     wifi::WiFiConnectionStatus,
 };
 use alloc::{string::ToString, vec, vec::Vec};
+use core::mem;
 use ctr::{
     frd::{FriendKey, FriendProfile, GameKey, Mii},
     result::CtrResult,
 };
-use safe_transmute::{transmute_to_bytes, TriviallyTransmutable};
+use no_std_io::{EndianWrite, StreamContainer, StreamWriter};
 
 impl FriendServiceContext {
     pub fn new() -> CtrResult<Self> {
@@ -106,14 +107,20 @@ impl FriendServiceContext {
         &self.session_contexts[session_index].static_buffer
     }
 
-    pub fn copy_into_session_static_buffer<T: TriviallyTransmutable>(
+    pub fn copy_into_session_static_buffer<T: EndianWrite + Sized>(
         &mut self,
         session_index: usize,
         data: &[T],
     ) -> &[u8] {
         let static_buffer = &mut self.session_contexts[session_index].static_buffer;
         static_buffer.clear();
-        static_buffer.extend_from_slice(transmute_to_bytes(data));
-        static_buffer
+        static_buffer.resize(data.len() * mem::size_of::<T>(), 0);
+        let mut stream = StreamContainer::new(static_buffer.as_mut_slice());
+
+        for datum in data.iter() {
+            stream.checked_write_stream_le(datum);
+        }
+
+        stream.into_raw()
     }
 }

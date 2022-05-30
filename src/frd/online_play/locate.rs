@@ -10,9 +10,9 @@ use ctr::{
     time::SystemTimestamp,
     utils::{base64_decode, copy_into_slice},
 };
-use safe_transmute::TriviallyTransmutable;
+use no_std_io::{EndianRead, EndianWrite};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ServiceLocateData {
     pub return_code: u32,
@@ -22,11 +22,6 @@ pub struct ServiceLocateData {
     pub status_data: [u8; 8],
     pub timestamp: SystemTimestamp,
 }
-
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for ServiceLocateData {}
 
 impl ServiceLocateData {
     pub fn from_fetched_response(response: &str, http_status_code: u32) -> CtrResult<Self> {
@@ -112,8 +107,9 @@ mod test {
 
     mod service_locate_data {
         use super::*;
+        use alloc::vec;
         use ctr::time::FormattedTimestamp;
-        use safe_transmute::transmute_one_to_bytes;
+        use no_std_io::Writer;
 
         #[test]
         fn should_parse_a_fetched_response() {
@@ -144,8 +140,11 @@ mod test {
             };
 
             assert_eq!(parsed_response, expected_result);
+
+            let mut bytes = vec![];
+            bytes.checked_write_le(0, &parsed_response);
             assert_eq!(
-                transmute_one_to_bytes(&parsed_response),
+                bytes,
                 [
                     0x07, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x00, 0x6e, 0x2f, 0x61, 0x00, 0x00,
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -186,7 +185,8 @@ mod test {
         #[test]
         fn should_default_to_all_zeros() {
             let game_auth_data = ServiceLocateData::default();
-            let game_auth_bytes = transmute_one_to_bytes(&game_auth_data);
+            let mut game_auth_bytes = vec![];
+            game_auth_bytes.checked_write_le(0, &game_auth_data);
 
             let expected_result: [u8; 408] = [0; 408];
             assert_eq!(game_auth_bytes, expected_result)

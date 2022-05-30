@@ -1,20 +1,71 @@
-use super::{context::FriendServiceContext, frdu::handle_frdu_request, result::FrdErrorCode};
-use crate::log;
-use alloc::format;
+use crate::FriendSysmodule;
 use core::convert::From;
-use ctr::{
-    frd::GameKey,
-    ipc::{ThreadCommandBuilder, ThreadCommandParser},
-    result::ResultCode,
-    sysmodule::server::RequestHandlerResult,
-};
+use ctr::{ctr_method, frd::GameKey, res::CtrResult, sysmodule::server::Service};
+use no_std_io::{EndianRead, EndianWrite};
 use num_enum::{FromPrimitive, IntoPrimitive};
 
 #[derive(IntoPrimitive, FromPrimitive)]
 #[repr(u16)]
-enum FrdACommand {
+pub enum FrdACommand {
     #[num_enum(default)]
     InvalidCommand = 0,
+    // frd:u forward
+    HasLoggedIn = 0x01,
+    IsOnline = 0x02,
+    Login = 0x03,
+    Logout = 0x04,
+    GetMyFriendKey = 0x05,
+    GetMyPreference = 0x06,
+    GetMyProfile = 0x07,
+    GetMyPresence = 0x08,
+    GetMyScreenName = 0x09,
+    GetMyMii = 0x0A,
+    GetMyLocalAccountId = 0x0B,
+    GetMyPlayingGame = 0x0C,
+    GetMyFavoriteGame = 0x0D,
+    GetMyNcPrincipalId = 0x0E,
+    GetMyComment = 0x0F,
+    GetMyPassword = 0x10,
+    GetFriendKeyList = 0x11,
+    GetFriendPresence = 0x12,
+    GetFriendScreenName = 0x13,
+    GetFriendMii = 0x14,
+    GetFriendProfile = 0x15,
+    GetFriendRelationship = 0x16,
+    GetFriendAttributeFlags = 0x17,
+    GetFriendPlayingGame = 0x18,
+    GetFriendFavoriteGame = 0x19,
+    GetFriendInfo = 0x1A,
+    IsIncludedInFriendList = 0x1B,
+    UnscrambleLocalFriendCode = 0x1C,
+    UpdateGameModeDescription = 0x1D,
+    UpdateGameMode = 0x1E,
+    SendInvitation = 0x1F,
+    AttachToEventNotification = 0x20,
+    SetNotificationMask = 0x21,
+    GetEventNotification = 0x22,
+    GetLastResponseResult = 0x23,
+    PrincipalIdToFriendCode = 0x24,
+    FriendCodeToPrincipalId = 0x25,
+    IsValidFriendCode = 0x26,
+    ResultToErrorCode = 0x27,
+    RequestGameAuthentication = 0x28,
+    GetGameAuthenticationData = 0x29,
+    RequestServiceLocator = 0x2A,
+    GetServiceLocatorData = 0x2B,
+    DetectNatProperties = 0x2C,
+    GetNatProperties = 0x2D,
+    GetServerTimeInterval = 0x2E,
+    AllowHalfAwake = 0x2F,
+    GetServerTypes = 0x30,
+    GetFriendComment = 0x31,
+    SetClientSdkVersion = 0x32,
+    GetMyApproachContext = 0x33,
+    AddFriendWithApproach = 0x34,
+    DecryptApproachContext = 0x35,
+    GetExtendedNatProperties = 0x36,
+
+    // frd:a exclusive
     CreateLocalAccount = 0x401,
     DeleteConfig = 0x402,
     SetLocalAccountId = 0x403,
@@ -33,164 +84,47 @@ enum FrdACommand {
     IncrementAccountConfigCounter = 0x410,
 }
 
-pub fn handle_frda_request(
-    context: &mut FriendServiceContext,
-    mut command_parser: ThreadCommandParser,
-    session_index: usize,
-) -> RequestHandlerResult {
-    let command_id = command_parser.get_command_id();
-
-    if command_id < 0x400 {
-        return handle_frdu_request(context, command_parser, session_index);
-    }
-
-    match command_id.into() {
-        FrdACommand::CreateLocalAccount => {
-            let _local_account_id = command_parser.pop();
-            let _nasc_environment = command_parser.pop();
-            let _server_type_field_1 = command_parser.pop();
-            let _server_type_field_2 = command_parser.pop();
-
-            let mut command = ThreadCommandBuilder::new(FrdACommand::CreateLocalAccount);
-            command.push(ResultCode::success());
-            Ok(command.build())
-        }
-        FrdACommand::HasUserData => {
-            let mut command = ThreadCommandBuilder::new(FrdACommand::HasUserData);
-            command.push(ResultCode::success());
-            Ok(command.build())
-        }
-        FrdACommand::SetPresenseGameKey => {
-            context.my_online_activity.playing_game = GameKey {
-                title_id: command_parser.pop_u64(),
-                version: command_parser.pop(),
-                unk: command_parser.pop(),
-            };
-
-            log::debug(&format!(
-                "SetPresenseGameKey {:08x}",
-                context.my_online_activity.playing_game.title_id
-            ));
-
-            let mut command = ThreadCommandBuilder::new(FrdACommand::SetPresenseGameKey);
-            command.push(ResultCode::success());
-            Ok(command.build())
-        }
-        FrdACommand::SetMyData => {
-            let mut command = ThreadCommandBuilder::new(FrdACommand::SetMyData);
-            command.push(ResultCode::success());
-            Ok(command.build())
-        }
-        _ => {
-            let mut command = ThreadCommandBuilder::new(FrdACommand::InvalidCommand);
-            command.push(FrdErrorCode::InvalidCommand);
-            Ok(command.build())
-        }
-    }
+impl Service for FrdACommand {
+    const ID: usize = 1;
+    const NAME: &'static str = "frd:a";
+    const MAX_SESSION_COUNT: i32 = 8;
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+#[derive(EndianRead, EndianWrite)]
+struct CreateLocalAccountIn {
+    local_account_id: u32,
+    nasc_environment: u32,
+    server_type_field_1: u32,
+    server_type_field_2: u32,
+}
 
-    mod set_local_account_id_and_server_info {
-        use super::*;
+#[ctr_method(cmd = "FrdACommand::CreateLocalAccount", normal = 0x1, translate = 0x0)]
+fn create_local_account(
+    _server: &mut FriendSysmodule,
+    _session_index: usize,
+    _input: CreateLocalAccountIn,
+) -> CtrResult {
+    // Stubbed so we don't write actual save data
+    Ok(())
+}
 
-        #[test]
-        fn returns_success() {
-            let mut context = FriendServiceContext::new().unwrap();
-            let command = ThreadCommandBuilder::new(FrdACommand::CreateLocalAccount);
+#[ctr_method(cmd = "FrdACommand::HasUserData", normal = 0x1, translate = 0x0)]
+fn has_user_data(_server: &mut FriendSysmodule, _session_index: usize) -> CtrResult {
+    Ok(())
+}
 
-            let mut result: ThreadCommandParser =
-                handle_frda_request(&mut context, command.build().into(), 0)
-                    .unwrap()
-                    .into();
+#[ctr_method(cmd = "FrdACommand::SetPresenseGameKey", normal = 0x1, translate = 0x0)]
+fn set_precense_game_key(
+    server: &mut FriendSysmodule,
+    _session_index: usize,
+    playing_game: GameKey,
+) -> CtrResult {
+    server.context.my_online_activity.playing_game = playing_game;
+    Ok(())
+}
 
-            assert_eq!(
-                result.validate_header(FrdACommand::CreateLocalAccount, 1, 0),
-                Ok(())
-            );
-            assert_eq!(result.pop_result(), Ok(()));
-        }
-    }
-
-    mod set_presense_game_key {
-        use super::*;
-
-        #[test]
-        fn set_presence_game_key_should_set_the_provided_game_key() {
-            let playing_game = GameKey {
-                title_id: 0x1122334455667788,
-                version: 0xAABBCCDD,
-                ..Default::default()
-            };
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.my_online_activity.playing_game = GameKey {
-                title_id: 0,
-                version: 0,
-                ..Default::default()
-            };
-
-            let mut command = ThreadCommandBuilder::new(FrdACommand::SetPresenseGameKey);
-            command.push_u64(playing_game.title_id);
-            command.push(playing_game.version);
-            command.push(playing_game.unk);
-
-            let mut result: ThreadCommandParser =
-                handle_frda_request(&mut context, command.build().into(), 0)
-                    .unwrap()
-                    .into();
-
-            assert_eq!(
-                result.validate_header(FrdACommand::SetPresenseGameKey, 1, 0),
-                Ok(())
-            );
-            assert_eq!(result.pop_result(), Ok(()));
-
-            assert_eq!(context.my_online_activity.playing_game, playing_game);
-        }
-    }
-
-    mod set_my_data {
-        use super::*;
-
-        #[test]
-        fn returns_success() {
-            let mut context = FriendServiceContext::new().unwrap();
-            let command = ThreadCommandBuilder::new(FrdACommand::SetMyData);
-
-            let mut result: ThreadCommandParser =
-                handle_frda_request(&mut context, command.build().into(), 0)
-                    .unwrap()
-                    .into();
-
-            assert_eq!(result.validate_header(FrdACommand::SetMyData, 1, 0), Ok(()));
-            assert_eq!(result.pop_result(), Ok(()));
-        }
-    }
-
-    mod unknown_cmd {
-        use super::*;
-
-        #[test]
-        fn handle_unknown_cmd() {
-            let mut context = FriendServiceContext::new().unwrap();
-            let command = ThreadCommandBuilder::new(FrdACommand::InvalidCommand);
-
-            let mut result: ThreadCommandParser =
-                handle_frda_request(&mut context, command.build().into(), 0)
-                    .unwrap()
-                    .into();
-
-            assert_eq!(
-                result.validate_header(FrdACommand::InvalidCommand, 1, 0),
-                Ok(())
-            );
-            assert_eq!(
-                result.pop_result().unwrap_err(),
-                FrdErrorCode::InvalidCommand.into_result_code()
-            );
-        }
-    }
+#[ctr_method(cmd = "FrdACommand::SetMyData", normal = 0x1, translate = 0x0)]
+fn set_my_data(_server: &mut FriendSysmodule, _session_index: usize) -> CtrResult {
+    // Stubbed so we don't write actual save data
+    Ok(())
 }

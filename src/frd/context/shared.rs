@@ -10,7 +10,6 @@ use crate::frd::{
 use alloc::{vec, vec::Vec};
 use ctr::{
     frd::{FriendKey, GameKey, NatProperties, NotificationEvent},
-    sysmodule::server::ServiceContext,
     Handle,
 };
 
@@ -66,13 +65,13 @@ pub struct FriendServiceContext {
     pub(super) friend_key_list: [FriendKey; MAX_FRIEND_COUNT],
 }
 
-impl ServiceContext for FriendServiceContext {
-    fn accept_session(&mut self) {
+impl FriendServiceContext {
+    pub fn accept_session(&mut self) {
         let session_context = SessionContext::new();
         self.session_contexts.push(session_context);
     }
 
-    fn close_session(&mut self, session_index: usize) {
+    pub fn close_session(&mut self, session_index: usize) {
         self.session_contexts.remove(session_index);
     }
 }

@@ -8,17 +8,16 @@ use crate::frd::{
     wifi::WiFiConnectionStatus,
 };
 use alloc::{vec, vec::Vec};
-use core::convert::TryInto;
+use core::{convert::TryInto, mem};
 use ctr::{
     frd::FriendKey,
     fs::{ArchiveId, File, FsArchive, FsPath, OpenFlags},
     result::CtrResult,
     result::GenericResultCode,
-    safe_transmute::transmute_one_pedantic,
     svc,
     svc::EventResetType,
 };
-use safe_transmute::{transmute_to_bytes, TriviallyTransmutable};
+use no_std_io::{EndianWrite, Reader, StreamContainer, StreamWriter};
 
 fn get_my_account(archive: &FsArchive) -> CtrResult<AccountConfig> {
     let account_path: FsPath = "/1/account".try_into()?;
@@ -42,20 +41,17 @@ fn get_my_data(archive: &FsArchive) -> CtrResult<MyData> {
     MyData::try_from_le_bytes(my_data_file)
 }
 
-fn read_friend_entry(friend_file: &File, index: u64) -> CtrResult<Option<FriendEntry>> {
-    let friend_bytes = friend_file.read((index * 0x100) + 16, 0x100)?;
-
-    if friend_bytes.len() == 0x100 {
-        let result = transmute_one_pedantic::<FriendEntry>(&friend_bytes)?;
-        Ok(Some(result))
-    } else {
-        Ok(None)
-    }
+fn read_friend_entry(friend_file: &File, index: u64) -> Option<FriendEntry> {
+    friend_file
+        .read((index * 0x100) + 16, 0x100)
+        .ok()?
+        .read_le(0)
+        .ok()
 }
 
 fn read_friend_list(friend_list: &mut Vec<FriendEntry>, friend_file: &File) -> CtrResult<()> {
     for index in 0..MAX_FRIEND_COUNT {
-        if let Some(friend_entry) = read_friend_entry(friend_file, index as u64)? {
+        if let Some(friend_entry) = read_friend_entry(friend_file, index as u64) {
             friend_list.push(friend_entry);
         } else {
             break;
@@ -69,9 +65,10 @@ impl FriendServiceContext {
     pub fn new() -> CtrResult<Self> {
         let ndm_wifi_event_handle = svc::create_event(EventResetType::OneShot)?;
 
-        let save_archive_path: Vec<u32> = vec![0, 0x10032];
-        let archive = FsArchive::new(ArchiveId::SystemSaveData, &save_archive_path.into())?;
+        let save_archive_path = FsPath::new_binary([0, 0x10032]);
+        let archive = FsArchive::new(ArchiveId::SystemSaveData, &save_archive_path)?;
 
+        // TODO: Don't assume the user is using account 1
         let friend_list_path: FsPath = "/1/friendlist".try_into()?;
         let friend_file = archive.open_file(&friend_list_path, OpenFlags::Read)?;
 
@@ -107,14 +104,20 @@ impl FriendServiceContext {
             .find(|friend_entry| friend_entry.friend_key == *friend_key)
     }
 
-    pub fn copy_into_session_static_buffer<T: TriviallyTransmutable>(
+    pub fn copy_into_session_static_buffer<T: EndianWrite + Sized>(
         &mut self,
         session_index: usize,
         data: &[T],
     ) -> &[u8] {
         let static_buffer = &mut self.session_contexts[session_index].static_buffer;
         static_buffer.clear();
-        static_buffer.extend_from_slice(transmute_to_bytes(data));
-        static_buffer
+        static_buffer.resize(data.len() * mem::size_of::<T>(), 0);
+        let mut stream = StreamContainer::new(static_buffer.as_mut_slice());
+
+        for datum in data.iter() {
+            stream.checked_write_stream_le(datum);
+        }
+
+        stream.into_raw()
     }
 }

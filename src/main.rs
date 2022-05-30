@@ -10,22 +10,26 @@ mod frd;
 mod heap_allocator;
 mod log;
 
-use alloc::{boxed::Box, vec};
+use alloc::vec;
 #[cfg(not(test))]
 use core::{arch::asm, panic::PanicInfo};
 use ctr::{
     ac, fs,
     http::httpc_init,
+    ipc::WrittenCommand,
+    match_ctr_route,
     memory::{MemoryBlock, MemoryPermission},
-    ptm, srv, svc,
+    ptm,
+    res::CtrResult,
+    srv, svc,
     sysmodule::{
         notification::NotificationManager,
-        server::{Service, ServiceManager},
+        server::{Service, ServiceManager, ServiceRouter},
     },
 };
 use frd::{
-    context::FriendServiceContext, frda::handle_frda_request, frdn::handle_frdn_request,
-    frdu::handle_frdu_request, notification::handle_sleep_notification,
+    context::FriendServiceContext, frda::FrdACommand, frdn::FrdNCommand, frdu::FrdUCommand,
+    notification::handle_sleep_notification,
 };
 
 /// Called after main exits to clean things up.
@@ -109,16 +113,169 @@ pub extern "C" fn abort() -> ! {
     svc::break_execution(svc::UserBreakType::Panic)
 }
 
+fn handle_termination_notification(_notification: u32) -> CtrResult {
+    svc::exit_process();
+}
+
+struct FriendSysmodule {
+    context: FriendServiceContext,
+}
+
+impl FriendSysmodule {
+    fn new() -> Self {
+        Self {
+            context: FriendServiceContext::new().unwrap(),
+        }
+    }
+}
+
+impl ServiceRouter for FriendSysmodule {
+    fn handle_request(
+        &mut self,
+        service_id: usize,
+        session_index: usize,
+    ) -> CtrResult<WrittenCommand> {
+        match_ctr_route!(
+            FriendSysmodule,
+            service_id,
+            session_index,
+            FrdNCommand::GetWiFiEvent,
+            FrdNCommand::ConnectToWiFi,
+            FrdNCommand::DisconnectFromWiFi,
+            FrdNCommand::GetWiFiState,
+            FrdACommand::HasLoggedIn,
+            FrdACommand::IsOnline,
+            FrdACommand::Login,
+            FrdACommand::Logout,
+            FrdACommand::GetMyFriendKey,
+            FrdACommand::GetMyPreference,
+            FrdACommand::GetMyProfile,
+            FrdACommand::GetMyPresence,
+            FrdACommand::GetMyScreenName,
+            FrdACommand::GetMyMii,
+            FrdACommand::GetMyLocalAccountId,
+            FrdACommand::GetMyPlayingGame,
+            FrdACommand::GetMyFavoriteGame,
+            FrdACommand::GetMyNcPrincipalId,
+            FrdACommand::GetMyComment,
+            FrdACommand::GetMyPassword,
+            FrdACommand::GetFriendKeyList,
+            FrdACommand::GetFriendPresence,
+            FrdACommand::GetFriendScreenName,
+            FrdACommand::GetFriendMii,
+            FrdACommand::GetFriendProfile,
+            FrdACommand::GetFriendRelationship,
+            FrdACommand::GetFriendAttributeFlags,
+            FrdACommand::GetFriendPlayingGame,
+            FrdACommand::GetFriendFavoriteGame,
+            FrdACommand::GetFriendInfo,
+            FrdACommand::IsIncludedInFriendList,
+            FrdACommand::UnscrambleLocalFriendCode,
+            FrdACommand::UpdateGameModeDescription,
+            FrdACommand::UpdateGameMode,
+            FrdACommand::SendInvitation,
+            FrdACommand::AttachToEventNotification,
+            FrdACommand::SetNotificationMask,
+            FrdACommand::GetEventNotification,
+            FrdACommand::GetLastResponseResult,
+            FrdACommand::PrincipalIdToFriendCode,
+            FrdACommand::FriendCodeToPrincipalId,
+            FrdACommand::IsValidFriendCode,
+            FrdACommand::ResultToErrorCode,
+            FrdACommand::RequestGameAuthentication,
+            FrdACommand::GetGameAuthenticationData,
+            FrdACommand::RequestServiceLocator,
+            FrdACommand::GetServiceLocatorData,
+            FrdACommand::DetectNatProperties,
+            FrdACommand::GetNatProperties,
+            FrdACommand::GetServerTimeInterval,
+            FrdACommand::AllowHalfAwake,
+            FrdACommand::GetServerTypes,
+            FrdACommand::GetFriendComment,
+            FrdACommand::SetClientSdkVersion,
+            FrdACommand::GetMyApproachContext,
+            FrdACommand::AddFriendWithApproach,
+            FrdACommand::DecryptApproachContext,
+            FrdACommand::GetExtendedNatProperties,
+            FrdACommand::CreateLocalAccount,
+            FrdACommand::HasUserData,
+            FrdACommand::SetPresenseGameKey,
+            FrdACommand::SetMyData,
+            FrdUCommand::HasLoggedIn,
+            FrdUCommand::IsOnline,
+            FrdUCommand::Login,
+            FrdUCommand::Logout,
+            FrdUCommand::GetMyFriendKey,
+            FrdUCommand::GetMyPreference,
+            FrdUCommand::GetMyProfile,
+            FrdUCommand::GetMyPresence,
+            FrdUCommand::GetMyScreenName,
+            FrdUCommand::GetMyMii,
+            FrdUCommand::GetMyLocalAccountId,
+            FrdUCommand::GetMyPlayingGame,
+            FrdUCommand::GetMyFavoriteGame,
+            FrdUCommand::GetMyNcPrincipalId,
+            FrdUCommand::GetMyComment,
+            FrdUCommand::GetMyPassword,
+            FrdUCommand::GetFriendKeyList,
+            FrdUCommand::GetFriendPresence,
+            FrdUCommand::GetFriendScreenName,
+            FrdUCommand::GetFriendMii,
+            FrdUCommand::GetFriendProfile,
+            FrdUCommand::GetFriendRelationship,
+            FrdUCommand::GetFriendAttributeFlags,
+            FrdUCommand::GetFriendPlayingGame,
+            FrdUCommand::GetFriendFavoriteGame,
+            FrdUCommand::GetFriendInfo,
+            FrdUCommand::IsIncludedInFriendList,
+            FrdUCommand::UnscrambleLocalFriendCode,
+            FrdUCommand::UpdateGameModeDescription,
+            FrdUCommand::UpdateGameMode,
+            FrdUCommand::SendInvitation,
+            FrdUCommand::AttachToEventNotification,
+            FrdUCommand::SetNotificationMask,
+            FrdUCommand::GetEventNotification,
+            FrdUCommand::GetLastResponseResult,
+            FrdUCommand::PrincipalIdToFriendCode,
+            FrdUCommand::FriendCodeToPrincipalId,
+            FrdUCommand::IsValidFriendCode,
+            FrdUCommand::ResultToErrorCode,
+            FrdUCommand::RequestGameAuthentication,
+            FrdUCommand::GetGameAuthenticationData,
+            FrdUCommand::RequestServiceLocator,
+            FrdUCommand::GetServiceLocatorData,
+            FrdUCommand::DetectNatProperties,
+            FrdUCommand::GetNatProperties,
+            FrdUCommand::GetServerTimeInterval,
+            FrdUCommand::AllowHalfAwake,
+            FrdUCommand::GetServerTypes,
+            FrdUCommand::GetFriendComment,
+            FrdUCommand::SetClientSdkVersion,
+            FrdUCommand::GetMyApproachContext,
+            FrdUCommand::AddFriendWithApproach,
+            FrdUCommand::DecryptApproachContext,
+            FrdUCommand::GetExtendedNatProperties,
+        )
+    }
+
+    fn accept_session(&mut self, _session_index: usize) {
+        self.context.accept_session()
+    }
+
+    fn close_session(&mut self, session_index: usize) {
+        self.context.close_session(session_index);
+    }
+}
+
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
     log::debug("\n\nStarted!");
-
-    let global_context = Box::new(FriendServiceContext::new().unwrap());
+    let router = FriendSysmodule::new();
 
     let services = vec![
-        Service::new("frd:u", 8, handle_frdu_request).unwrap(),
-        Service::new("frd:a", 8, handle_frda_request).unwrap(),
-        Service::new("frd:n", 1, handle_frdn_request).unwrap(),
+        FrdUCommand::register().unwrap(),
+        FrdACommand::register().unwrap(),
+        FrdNCommand::register().unwrap(),
     ];
 
     log::debug("Setting up notification manager");
@@ -140,17 +297,21 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
             handle_sleep_notification,
         )
         .unwrap();
+    notification_manger
+        .subscribe(
+            ptm::NotificationId::Termination,
+            handle_termination_notification,
+        )
+        .unwrap();
+
     // TODO:
     // notification_manger.subscribe(0x301, do_something);
     // notification_manger.subscribe(0x302, do_something);
 
     log::debug("Setting up service manager");
-    let mut manager = ServiceManager::new(services, notification_manger, global_context);
+    let mut manager = ServiceManager::new(services, notification_manger, router);
     log::debug("Set up service manager");
-    let result = manager.run();
+    manager.run().unwrap();
 
-    match result {
-        Ok(_) => 0,
-        Err(_) => panic!(),
-    }
+    svc::exit_process();
 }

@@ -5,11 +5,11 @@ use ctr::{
     },
     time::FormattedTimestamp,
 };
-use safe_transmute::TriviallyTransmutable;
+use no_std_io::{EndianRead, EndianWrite};
 
 pub const MAX_FRIEND_COUNT: usize = 100;
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendEntry {
     pub friend_key: FriendKey,
@@ -32,11 +32,6 @@ pub struct FriendEntry {
     pub timestamp2_2: FormattedTimestamp,
 }
 
-// This is safe because all fields in the struct can function with any value.
-// At some point it may be worth having a validator to ensure a valid value
-// is sent to another process.
-unsafe impl TriviallyTransmutable for FriendEntry {}
-
 impl From<FriendEntry> for FriendInfo {
     fn from(friend_entry: FriendEntry) -> Self {
         Self {
@@ -52,7 +47,7 @@ impl From<FriendEntry> for FriendInfo {
                     area: friend_entry.friend_profile.area,
                     language: friend_entry.friend_profile.language,
                     platform: friend_entry.friend_profile.platform,
-                    padding: [0, 0, 0],
+                    padding: [0; 3],
                 },
                 favorite_game: friend_entry.favorite_game,
                 unk2: 0,

@@ -12,7 +12,6 @@ use ctr::{
     time::SystemTimestamp,
     utils::cstring::parse_null_terminated_str,
 };
-use safe_transmute::transmute_to_bytes;
 
 #[cfg_attr(test, mocktopus::macros::mockable)]
 pub fn create_game_server_request(
@@ -80,8 +79,11 @@ pub fn create_game_server_request(
     let local_friend_code_seed = get_local_friend_code_seed_data()?;
     request.add_post_base64_field("fcdcert", &local_friend_code_seed)?;
 
-    let console_username = get_console_username()?.encode_utf16().collect::<Vec<u16>>();
-    request.add_post_base64_field("devname", transmute_to_bytes(&console_username))?;
+    let console_username = get_console_username()?
+        .encode_utf16()
+        .flat_map(|short| short.to_le_bytes())
+        .collect::<Vec<u8>>();
+    request.add_post_base64_field("devname", &console_username)?;
 
     // Has special formatting
     request.add_post_base64_field(
@@ -250,10 +252,13 @@ mod test {
                 post_body_fields.get("fcdcert"),
                 Some(&base64_encode(local_friend_code_seed))
             );
-            let username = "TestUser".encode_utf16().collect::<Vec<u16>>();
+            let username = "TestUser"
+                .encode_utf16()
+                .flat_map(|short| short.to_le_bytes())
+                .collect::<Vec<u8>>();
             assert_eq!(
                 post_body_fields.get("devname"),
-                Some(&base64_encode(transmute_to_bytes(&username)))
+                Some(&base64_encode(&username))
             );
             assert_eq!(
                 post_body_fields.get("servertype"),
