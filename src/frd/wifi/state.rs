@@ -33,7 +33,6 @@ pub fn set_wifi_connection_status(
     Ok(())
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 pub fn connect_to_wifi(context: &mut FriendServiceContext) -> CtrResult<()> {
     let original_ndm_wifi_state = context.ndm_wifi_state;
     context.ndm_wifi_state = 2;
@@ -140,115 +139,6 @@ mod test {
         fn should_return_1_when_the_ndm_state_is_2_and_the_wifi_connection_status_is_idle() {
             let result = get_wifi_state(2, WiFiConnectionStatus::Idle);
             assert_eq!(result, 1);
-        }
-    }
-
-    mod set_wifi_status {
-        use mocktopus::mocking::{MockResult, Mockable};
-
-        use super::*;
-
-        #[test]
-        fn should_signal_the_event_if_the_wifi_connection_status_and_next_state_is_different() {
-            let raw_event_handle = 1234;
-
-            svc::signal_event.mock_safe(move |handle| {
-                // This is safe since it's just a test and the handle won't be duplicated.
-                let raw_handle = unsafe { handle.get_raw() };
-                assert_eq!(raw_handle, raw_event_handle);
-                MockResult::Return(Ok(()))
-            });
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.ndm_wifi_state = 1;
-            context.wifi_connection_status = WiFiConnectionStatus::Idle;
-            context.ndm_wifi_event_handle = raw_event_handle.into();
-
-            set_wifi_connection_status(&mut context, WiFiConnectionStatus::Connecting).unwrap();
-        }
-
-        #[test]
-        fn should_not_signal_the_event_if_the_wifi_connection_status_is_the_same_as_the_current_status(
-        ) {
-            let raw_event_handle = 1234;
-            svc::signal_event.mock_safe(move |_| panic!("Event should not have been signalled!"));
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.ndm_wifi_state = 1;
-            context.wifi_connection_status = WiFiConnectionStatus::Idle;
-            context.ndm_wifi_event_handle = raw_event_handle.into();
-
-            set_wifi_connection_status(&mut context, WiFiConnectionStatus::Idle).unwrap();
-        }
-
-        #[test]
-        fn should_not_signal_the_event_if_the_state_is_the_same_as_the_current_state() {
-            let raw_event_handle = 1234;
-            svc::signal_event.mock_safe(move |_| panic!("Event should not have been signalled!"));
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.ndm_wifi_state = 1;
-            context.wifi_connection_status = WiFiConnectionStatus::Connecting;
-            context.ndm_wifi_event_handle = raw_event_handle.into();
-
-            set_wifi_connection_status(&mut context, WiFiConnectionStatus::Connected).unwrap();
-        }
-    }
-
-    mod connect_to_wifi {
-        use super::*;
-        use ctr::result::ResultCode;
-        use mocktopus::mocking::{MockResult, Mockable};
-
-        #[test]
-        fn should_signal_the_event_if_the_ndm_wifi_state_is_not_2_and_the_wifi_connection_status_is_not_idle(
-        ) {
-            let raw_event_handle = 1234;
-
-            svc::signal_event.mock_safe(move |handle| {
-                // This is safe since it's just a test and the handle won't be duplicated.
-                let raw_handle = unsafe { handle.get_raw() };
-                assert_eq!(raw_handle, raw_event_handle);
-                MockResult::Return(Ok(()))
-            });
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.ndm_wifi_state = 1;
-            context.wifi_connection_status = WiFiConnectionStatus::Connecting;
-            context.ndm_wifi_event_handle = raw_event_handle.into();
-
-            connect_to_wifi(&mut context).unwrap();
-        }
-
-        #[test]
-        fn should_set_the_wifi_status_to_connected_if_connecting_is_successful() {
-            AcController::quick_connect.mock_safe(|| MockResult::Return(Ok(())));
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.ndm_wifi_state = 2;
-            context.wifi_connection_status = WiFiConnectionStatus::Idle;
-            context.ndm_wifi_event_handle = 1234u32.into();
-
-            connect_to_wifi(&mut context).unwrap();
-
-            assert_eq!(
-                context.wifi_connection_status,
-                WiFiConnectionStatus::Connected
-            )
-        }
-
-        #[test]
-        fn should_set_the_wifi_status_to_idle_if_connecting_is_not_successful() {
-            AcController::quick_connect.mock_safe(|| MockResult::Return(Err(ResultCode::from(-1))));
-
-            let mut context = FriendServiceContext::new().unwrap();
-            context.ndm_wifi_state = 2;
-            context.wifi_connection_status = WiFiConnectionStatus::Idle;
-            context.ndm_wifi_event_handle = 1234u32.into();
-
-            connect_to_wifi(&mut context).unwrap_err();
-
-            assert_eq!(context.wifi_connection_status, WiFiConnectionStatus::Idle)
         }
     }
 }

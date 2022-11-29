@@ -1,6 +1,6 @@
 use ctr::{
-    ptm,
-    ptm::{
+    ptm_sysm,
+    ptm_sysm::{
         sys_get_notification_ack_value, sys_notify_sleep_preparation_complete,
         sys_reply_to_sleep_query,
     },
@@ -11,9 +11,9 @@ use ctr::{
 ///
 /// However it's probably safe to assume only [0x100, 0x179](https://github.com/LumaTeam/Luma3DS/blob/ebeef7ab7f730ae35658b66ca97c5da9f663a17d/sysmodules/loader/source/service_manager.c#L58-L59), and subscribed notifications will be used here, so an enum may be better here in the future.
 pub fn handle_sleep_notification(notification_id: u32) -> NotificationHandlerResult {
-    ptm::sysm_init()?;
+    let _session = ptm_sysm::Session::new()?;
 
-    if notification_id == ptm::NotificationId::SleepRequested {
+    if notification_id == ptm_sysm::NotificationId::SleepRequested {
         // Sleeping and logging seem to interfere with each other,
         // so we deny sleeping when in dev mode
         #[cfg(debug_assertions)]
@@ -26,6 +26,5 @@ pub fn handle_sleep_notification(notification_id: u32) -> NotificationHandlerRes
         sys_notify_sleep_preparation_complete(ack_value)?;
     }
 
-    ptm::sysm_exit();
     Ok(())
 }

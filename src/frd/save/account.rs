@@ -1,12 +1,9 @@
-#[cfg(not(test))]
 use crate::frd::result::FrdErrorCode;
 use alloc::{format, string::String};
-#[cfg(not(test))]
 use core::convert::TryInto;
-#[cfg(not(test))]
 use ctr::{result::CtrResult, utils::convert::bytes_to_utf16le_string};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum NascEnvironment {
     Prod = 0,
@@ -36,10 +33,7 @@ pub struct AccountConfig {
     pub server_type_2: u8,
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 impl AccountConfig {
-    #[cfg(not(test))]
-    // This explicitly mentions the endianness instead of From<[u8; 88]>
     pub fn try_from_le_bytes(raw_data: [u8; 88]) -> CtrResult<Self> {
         let header_bytes = raw_data[..8].try_into().unwrap();
 

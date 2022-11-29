@@ -36,9 +36,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctr"
+version = "0.1.0"
+source = "git+https://github.com/zaksabeast/libctr-rs.git?rev=a1be494#a1be49460dbfafa480145589d9bc73a541eadd72"
+dependencies = [
+ "base64",
+ "cstr_core",
+ "ctr_macros",
+ "ctru-sys",
+ "hashbrown",
+ "linked_list_allocator 0.10.4",
+ "no_std_io",
+ "num_enum",
+]
+
+[[package]]
 name = "ctr_macros"
 version = "0.1.0"
-source = "git+https://github.com/zaksabeast/libctr-rs?rev=9a6585c#9a6585cf25ce77cac0a35568372675a2df88726c"
+source = "git+https://github.com/zaksabeast/libctr-rs.git?rev=a1be494#a1be49460dbfafa480145589d9bc73a541eadd72"
 dependencies = [
  "darling",
  "heck",
@@ -125,10 +140,9 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "cstr_core",
+ "ctr",
  "lazy_static",
- "libctr-rs",
- "linked_list_allocator",
- "mocktopus",
+ "linked_list_allocator 0.9.0",
  "no_std_io",
  "num_enum",
  "sha1",
@@ -182,26 +196,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9385f66bf6105b241aa65a61cb923ef20efc665cb9f9bb50ac2f0c4b7f378d41"
 
 [[package]]
-name = "libctr-rs"
-version = "0.1.0"
-source = "git+https://github.com/zaksabeast/libctr-rs?rev=9a6585c#9a6585cf25ce77cac0a35568372675a2df88726c"
-dependencies = [
- "base64",
- "cstr_core",
- "ctr_macros",
- "ctru-sys",
- "hashbrown",
- "mocktopus",
- "no_std_io",
- "num_enum",
- "static_assertions",
-]
-
-[[package]]
 name = "linked_list_allocator"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0b725207570aa16096962d0b20c79f8a543df2280bd3c903022b9b0b4d7ea68"
+dependencies = [
+ "spinning_top",
+]
+
+[[package]]
+name = "linked_list_allocator"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e322f259d225fbae43a1b053b2dc6a5968a6bdf8b205f5de684dab485b95030e"
 dependencies = [
  "spinning_top",
 ]
@@ -218,8 +225,9 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.1.0"
-source = "git+https://github.com/zaksabeast/no_std_io.git?rev=d1b5523#d1b5523cda5aa81f0d454dc0ee73984b23448804"
+source = "git+https://github.com/zaksabeast/no_std_io.git?rev=4bc5adf#4bc5adfd8bd323609eec9f8f796ee033defe56dd"
 dependencies = [
+ "darling",
  "proc-macro2",
  "quote",
  "syn",
@@ -232,29 +240,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
 
 [[package]]
-name = "mocktopus"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1e54a5bbecd61a064cb9c6ef396f8c896aee14e5baba8d1d555f35167dfd7c3"
-dependencies = [
- "mocktopus_macros",
-]
-
-[[package]]
-name = "mocktopus_macros"
-version = "0.7.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3048ef3680533a27f9f8e7d6a0bce44dc61e4895ea0f42709337fa1c8616fefe"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "no_std_io"
 version = "0.1.0"
-source = "git+https://github.com/zaksabeast/no_std_io.git?rev=d1b5523#d1b5523cda5aa81f0d454dc0ee73984b23448804"
+source = "git+https://github.com/zaksabeast/no_std_io.git?rev=4bc5adf#4bc5adfd8bd323609eec9f8f796ee033defe56dd"
 dependencies = [
  "macros",
  "safe-transmute",
@@ -359,12 +347,6 @@ checksum = "75adad84ee84b521fb2cca2d4fd0f1dab1d8d026bda3c5bea4ca63b5f9f9293c"
 dependencies = [
  "lock_api",
 ]
-
-[[package]]
-name = "static_assertions"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "strsim"

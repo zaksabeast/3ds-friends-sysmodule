@@ -8,14 +8,11 @@ publish = false
 [dependencies]
 base64 = { version = "0.13", default-features = false, features = ["alloc"] }
 cstr_core = "0.2"
-ctr = { package = "libctr-rs", git = "https://github.com/zaksabeast/libctr-rs", rev = "9a6585c" }
+ctr = { git = "https://github.com/zaksabeast/libctr-rs.git", rev = "a1be494" }
 lazy_static = { version = "1.4.0", default-features = false, features = ["spin_no_std"] }
-no_std_io = { git = "https://github.com/zaksabeast/no_std_io.git", rev = "d1b5523" }
+no_std_io = { git = "https://github.com/zaksabeast/no_std_io.git", rev = "4bc5adf" }
 num_enum = { version = "0.5", default-features = false }
 sha1 = "0.6"
-
-[dev-dependencies]
-mocktopus = "0.7.11"
 
 [target.'cfg(target_os = "horizon")'.dependencies]
 linked_list_allocator = "0.9.0"

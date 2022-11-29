@@ -9,7 +9,7 @@ use no_std_io::{EndianRead, EndianWrite};
 
 pub const MAX_FRIEND_COUNT: usize = 100;
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, EndianRead, EndianWrite)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct FriendEntry {
     pub friend_key: FriendKey,

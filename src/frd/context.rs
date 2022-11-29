@@ -1,5 +1,5 @@
-use super::FriendServiceContext;
 use crate::frd::{
+    online_play::{authentication::GameAuthenticationData, locate::ServiceLocateData},
     save::{
         account::AccountConfig,
         friend_list::{FriendEntry, MAX_FRIEND_COUNT},
@@ -8,35 +8,94 @@ use crate::frd::{
     wifi::WiFiConnectionStatus,
 };
 use alloc::{vec, vec::Vec};
-use core::{convert::TryInto, mem};
+use core::mem;
 use ctr::{
-    frd::FriendKey,
+    frd::{FriendKey, GameKey, NatProperties, NotificationEvent},
     fs::{ArchiveId, File, FsArchive, FsPath, OpenFlags},
     result::CtrResult,
-    result::GenericResultCode,
     svc,
     svc::EventResetType,
+    Handle,
 };
 use no_std_io::{EndianWrite, Reader, StreamContainer, StreamWriter};
 
+#[derive(Default)]
+pub struct OnlineActivity {
+    pub playing_game: GameKey,
+}
+
+pub struct SessionContext {
+    pub last_game_authentication_response: Option<GameAuthenticationData>,
+    pub last_service_locator_response: Option<ServiceLocateData>,
+    pub static_buffer: Vec<u8>,
+    pub process_id: u32,
+    pub client_sdk_version: u32,
+    pub notification_mask: u32,
+    pub server_time_interval: u64,
+    pub client_event: Option<Handle>,
+    // TODO: Add a mechanism that uses the notification_mask
+    pub client_event_queue: Vec<NotificationEvent>,
+}
+
+impl SessionContext {
+    pub fn new() -> Self {
+        Self {
+            last_game_authentication_response: None,
+            last_service_locator_response: None,
+            static_buffer: vec![],
+            process_id: 0,
+            client_sdk_version: 0,
+            notification_mask: 0,
+            server_time_interval: 0,
+            client_event: None,
+            client_event_queue: vec![],
+        }
+    }
+}
+
+/// Context needed for the FRD services.
+pub struct FriendServiceContext {
+    pub ndm_wifi_event_handle: Handle,
+    pub ndm_wifi_state: u8,
+    pub wifi_connection_status: WiFiConnectionStatus,
+    pub counter: u32,
+    pub account_config: AccountConfig,
+    pub my_data: MyData,
+    pub my_online_activity: OnlineActivity,
+    pub nat_properties: NatProperties,
+    pub friend_list: Vec<FriendEntry>,
+    pub session_contexts: Vec<SessionContext>,
+    // This needs to be an array so we can guarantee the pointer
+    // to the underlying data never changes.
+    // This is important for FrdUCommand::GetFriendKeyList.
+    pub(super) friend_key_list: [FriendKey; MAX_FRIEND_COUNT],
+}
+
+impl FriendServiceContext {
+    pub fn accept_session(&mut self) {
+        let session_context = SessionContext::new();
+        self.session_contexts.push(session_context);
+    }
+
+    pub fn close_session(&mut self, session_index: usize) {
+        self.session_contexts.remove(session_index);
+    }
+}
+
 fn get_my_account(archive: &FsArchive) -> CtrResult<AccountConfig> {
-    let account_path: FsPath = "/1/account".try_into()?;
     let account_file: [u8; 88] = archive
-        .open_file(&account_path, OpenFlags::Read)?
+        .open_file(&"/1/account".into(), OpenFlags::Read)?
         .read(0, 88)?
-        .try_into()
-        .map_err(|_| GenericResultCode::TryFromBytes)?;
+        .read_le(0)?;
 
     AccountConfig::try_from_le_bytes(account_file)
 }
 
 fn get_my_data(archive: &FsArchive) -> CtrResult<MyData> {
-    let my_data_path: FsPath = "/1/mydata".try_into()?;
     let my_data_file: [u8; 288] = archive
-        .open_file(&my_data_path, OpenFlags::Read)?
+        .open_file(&"/1/mydata".into(), OpenFlags::Read)?
         .read(0, 288)?
-        .try_into()
-        .map_err(|_| GenericResultCode::TryFromBytes)?;
+        .read_le(0)?;
 
     MyData::try_from_le_bytes(my_data_file)
 }
@@ -69,7 +128,7 @@ impl FriendServiceContext {
         let archive = FsArchive::new(ArchiveId::SystemSaveData, &save_archive_path)?;
 
         // TODO: Don't assume the user is using account 1
-        let friend_list_path: FsPath = "/1/friendlist".try_into()?;
+        let friend_list_path: FsPath = "/1/friendlist".into();
         let friend_file = archive.open_file(&friend_list_path, OpenFlags::Read)?;
 
         let mut friend_list = Vec::with_capacity(MAX_FRIEND_COUNT);

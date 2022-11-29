@@ -2,7 +2,7 @@ use ctr::result::ResultCode;
 use num_enum::IntoPrimitive;
 
 // TODO: Replace these with proper ctr::result::ResultCodes.
-#[derive(Debug, PartialEq, IntoPrimitive)]
+#[derive(Debug, PartialEq, Eq, IntoPrimitive)]
 #[repr(u32)]
 pub enum FrdErrorCode {
     InvalidPointer = 0xe0e0c7f6,

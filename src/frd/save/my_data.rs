@@ -1,10 +1,7 @@
-#[cfg(not(test))]
 use crate::frd::result::FrdErrorCode;
 use alloc::string::String;
-#[cfg(not(test))]
 use core::convert::TryInto;
 use ctr::frd::{FriendProfile, GameKey, Mii};
-#[cfg(not(test))]
 use ctr::{result::CtrResult, utils::convert::bytes_to_utf16le_string};
 
 pub struct MyData {
@@ -22,7 +19,6 @@ pub struct MyData {
     pub mii: Mii,
 }
 
-#[cfg(not(test))]
 impl MyData {
     // This explicitly mentions the endianness instead of From<[u8; 288]>
     pub fn try_from_le_bytes(raw_data: [u8; 288]) -> CtrResult<Self> {

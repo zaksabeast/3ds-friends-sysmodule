@@ -1,12 +1,9 @@
 use alloc::{str, vec::Vec};
 use core::str::FromStr;
 use ctr::{
-    result::{CtrResult, GenericResultCode},
+    result::{error, CtrResult},
     time::{FormattedTimestamp, SystemTimestamp},
-    utils::{
-        base64_decode,
-        parse::{parse_num, str_from_utf8},
-    },
+    utils::base64_decode,
 };
 
 pub fn parse_address(full_address: &str) -> CtrResult<(&str, u32)> {
@@ -16,8 +13,8 @@ pub fn parse_address(full_address: &str) -> CtrResult<(&str, u32)> {
     let port = split_address.next();
 
     match (address, port) {
-        (Some(address), Some(port)) => Ok((address, parse_num(port)?)),
-        _ => Err(GenericResultCode::InvalidValue.into()),
+        (Some(address), Some(port)) => Ok((address, port.parse()?)),
+        _ => Err(error::invalid_value()),
     }
 }
 
@@ -26,19 +23,18 @@ pub fn parse_datetime(datetime: &str) -> CtrResult<SystemTimestamp> {
         .as_bytes()
         .chunks(2)
         .map(str::from_utf8)
-        .collect::<Result<Vec<&str>, _>>()
-        .map_err(|_| GenericResultCode::InvalidValue)?;
+        .collect::<Result<Vec<&str>, _>>()?;
 
     if time_slices.len() != 7 {
-        return Err(GenericResultCode::InvalidValue.into());
+        return Err(error::invalid_value());
     }
 
-    let year: u16 = parse_num(time_slices[1])?;
-    let month: u16 = parse_num(time_slices[2])?;
-    let date: u16 = parse_num(time_slices[3])?;
-    let hours: u16 = parse_num(time_slices[4])?;
-    let minutes: u16 = parse_num(time_slices[5])?;
-    let seconds: u16 = parse_num(time_slices[6])?;
+    let year: u16 = time_slices[1].parse()?;
+    let month: u16 = time_slices[2].parse()?;
+    let date: u16 = time_slices[3].parse()?;
+    let hours: u16 = time_slices[4].parse()?;
+    let minutes: u16 = time_slices[5].parse()?;
+    let seconds: u16 = time_slices[6].parse()?;
 
     let parsed_timestamp =
         FormattedTimestamp::new(year + 2000, month, date, hours, minutes, seconds);
@@ -48,12 +44,12 @@ pub fn parse_datetime(datetime: &str) -> CtrResult<SystemTimestamp> {
 
 pub fn parse_num_from_base64<T: FromStr>(base64: &str) -> CtrResult<T> {
     let decoded_bytes = base64_decode(base64)?;
-    let decoded_str = str_from_utf8(&decoded_bytes)?;
-    parse_num(decoded_str)
+    let decoded_str = str::from_utf8(&decoded_bytes)?;
+    decoded_str.parse().map_err(|_| error::invalid_value())
 }
 
 pub fn parse_datetime_from_base64(base64: &str) -> CtrResult<SystemTimestamp> {
     let decoded_bytes = base64_decode(base64)?;
-    let decoded_str = str_from_utf8(&decoded_bytes)?;
+    let decoded_str = str::from_utf8(&decoded_bytes)?;
     parse_datetime(decoded_str)
 }

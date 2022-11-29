@@ -12,7 +12,7 @@ use ctr::{
 };
 use no_std_io::{EndianRead, EndianWrite};
 
-#[derive(Debug, PartialEq, Clone, Copy, EndianRead, EndianWrite)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct ServiceLocateData {
     pub return_code: u32,
@@ -77,7 +77,6 @@ impl Default for ServiceLocateData {
     }
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 pub fn create_game_service_locate_request(
     context: &FriendServiceContext,
     requesting_process_id: u32,
@@ -190,48 +189,6 @@ mod test {
 
             let expected_result: [u8; 408] = [0; 408];
             assert_eq!(game_auth_bytes, expected_result)
-        }
-    }
-
-    mod create_game_service_locate_request {
-        use super::*;
-        use ctr::{http::RequestMethod, utils::base64_encode};
-        use mocktopus::mocking::{MockResult, Mockable};
-
-        #[test]
-        fn should_create_a_game_server_request_and_add_the_key_hash_and_svc_as_fields() {
-            create_game_server_request.mock_safe(
-                |_context,
-                 _requesting_process_id,
-                 _requesting_game_id,
-                 _sdk_version_low,
-                 _sdk_version_high| {
-                    MockResult::Return(HttpContext::new("", RequestMethod::Post))
-                },
-            );
-
-            let context = FriendServiceContext::new().unwrap();
-            let request = create_game_service_locate_request(
-                &context,
-                1234,
-                5678,
-                20,
-                21,
-                "key_hash-test",
-                "svc-test",
-            )
-            .expect("Login request should have been created!")
-            .mock;
-            let post_body_fields = &request.borrow().post_body_fields;
-
-            assert_eq!(
-                post_body_fields.get("keyhash"),
-                Some(&base64_encode("key_hash-test"))
-            );
-            assert_eq!(
-                post_body_fields.get("svc"),
-                Some(&base64_encode("svc-test"))
-            );
         }
     }
 }

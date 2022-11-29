@@ -9,11 +9,11 @@ use ctr::{
     http::HttpContext,
     result::CtrResult,
     time::SystemTimestamp,
-    utils::{base64_decode, copy_into_slice, parse::str_from_utf8},
+    utils::{base64_decode, copy_into_slice},
 };
 use no_std_io::{EndianRead, EndianWrite};
 
-#[derive(Debug, PartialEq, Clone, Copy, EndianRead, EndianWrite)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, EndianRead, EndianWrite)]
 #[repr(C)]
 pub struct GameAuthenticationData {
     return_code: u32,
@@ -43,7 +43,7 @@ impl GameAuthenticationData {
             match (key, value) {
                 (Some("locator"), Some(inner_value)) => {
                     let decoded_value = base64_decode(inner_value)?;
-                    let decoded_str = str_from_utf8(&decoded_value)?;
+                    let decoded_str = str::from_utf8(&decoded_value)?;
                     let (address, port) = parse_address(decoded_str)?;
 
                     copy_into_slice(address.as_bytes(), &mut game_auth_data.address)?;
@@ -83,7 +83,6 @@ impl Default for GameAuthenticationData {
     }
 }
 
-#[cfg_attr(test, mocktopus::macros::mockable)]
 pub fn create_game_login_request(
     context: &FriendServiceContext,
     requesting_process_id: u32,
@@ -180,36 +179,6 @@ mod test {
             let mut game_auth_bytes = vec![];
             game_auth_bytes.checked_write_le(0, &game_auth_data);
             assert_eq!(game_auth_bytes, [0; 312])
-        }
-    }
-
-    mod create_game_login_request {
-        use super::*;
-        use ctr::{http::RequestMethod, utils::base64_encode};
-        use mocktopus::mocking::{MockResult, Mockable};
-
-        #[test]
-        fn should_create_a_game_server_request_and_add_the_given_ingamesn_as_a_request_field() {
-            create_game_server_request.mock_safe(
-                |_context,
-                 _requesting_process_id,
-                 _requesting_game_id,
-                 _sdk_version_low,
-                 _sdk_version_high| {
-                    MockResult::Return(HttpContext::new("", RequestMethod::Post))
-                },
-            );
-
-            let context = FriendServiceContext::new().unwrap();
-            let request = create_game_login_request(&context, 1234, 5678, 20, 21, "ingamesn-test")
-                .expect("Login request should have been created!")
-                .mock;
-            let post_body_fields = &request.borrow().post_body_fields;
-
-            assert_eq!(
-                post_body_fields.get("ingamesn"),
-                Some(&base64_encode("ingamesn-test"))
-            );
         }
     }
 }

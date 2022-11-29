@@ -7,21 +7,18 @@
 extern crate alloc;
 
 mod frd;
-mod heap_allocator;
 mod log;
 
 use alloc::vec;
-#[cfg(not(test))]
-use core::{arch::asm, panic::PanicInfo};
 use ctr::{
     ac, fs,
     http::httpc_init,
     ipc::WrittenCommand,
     match_ctr_route,
     memory::{MemoryBlock, MemoryPermission},
-    ptm,
+    ptm_sysm,
     res::CtrResult,
-    srv, svc,
+    svc,
     sysmodule::{
         notification::NotificationManager,
         server::{Service, ServiceManager, ServiceRouter},
@@ -31,13 +28,6 @@ use frd::{
     context::FriendServiceContext, frda::FrdACommand, frdn::FrdNCommand, frdu::FrdUCommand,
     notification::handle_sleep_notification,
 };
-
-/// Called after main exits to clean things up.
-/// Used by 3ds toolchain.
-#[no_mangle]
-pub extern "C" fn __wrap_exit() {
-    svc::exit_process();
-}
 
 #[repr(align(0x1000))]
 struct HttpBuffer([u8; 0x1000]);
@@ -49,69 +39,6 @@ impl HttpBuffer {
 }
 
 static mut HTTP_BUFFER: HttpBuffer = HttpBuffer([0; 0x1000]);
-
-/// Called before main to initialize the system.
-/// Used by 3ds toolchain.
-#[no_mangle]
-pub extern "C" fn initSystem() {
-    // This is safe because we're only supposed to use this one time
-    // while initializing the system, which is happening right here.
-    unsafe { heap_allocator::init_heap() };
-
-    loop {
-        match srv::init() {
-            Ok(_) => break,
-            Err(error_code) => {
-                if error_code != 0xd88007fa {
-                    panic!();
-                }
-            }
-        };
-
-        svc::sleep_thread(500000i64);
-    }
-
-    fs::init().unwrap();
-    ac::init().unwrap();
-
-    // This is safe as long as we're single threaded
-    let aligned_buffer = unsafe { HTTP_BUFFER.as_mut_slice() };
-    let memory_block = MemoryBlock::new(
-        aligned_buffer,
-        MemoryPermission::None,
-        MemoryPermission::ReadWrite,
-    )
-    .expect("");
-    httpc_init(memory_block).expect("HTTPC did not init");
-}
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(panic: &PanicInfo<'_>) -> ! {
-    if let Some(location) = panic.location() {
-        let file = location.file();
-        let slice = &file[file.len() - 7..];
-
-        // Since we're about to break, storing a few u32s in these registers won't break us further.
-        // In the future it might be helpful to disable this for release builds.
-        unsafe {
-            // r9 and r10 aren't used as frequently as the lower registers, so in most situations
-            // we'll get more useful information by storing the last 4 characters of the file name
-            // and the line number where we broke.
-            let partial_file_name = *(slice.as_ptr() as *const u32);
-            asm!("mov r9, {}", in(reg) partial_file_name);
-            asm!("mov r10, {}", in(reg) location.line());
-        }
-    }
-
-    svc::break_execution(svc::UserBreakType::Panic)
-}
-
-#[cfg(not(test))]
-#[no_mangle]
-pub extern "C" fn abort() -> ! {
-    svc::break_execution(svc::UserBreakType::Panic)
-}
 
 fn handle_termination_notification(_notification: u32) -> CtrResult {
     svc::exit_process();
@@ -267,9 +194,23 @@ impl ServiceRouter for FriendSysmodule {
     }
 }
 
-#[start]
-fn main(_argc: isize, _argv: *const *const u8) -> isize {
+#[ctr::ctr_start(heap_byte_size = 0x10000)]
+fn main() {
+    fs::init().unwrap();
+    ac::init().unwrap();
+
+    // This is safe as long as we're single threaded
+    let aligned_buffer = unsafe { HTTP_BUFFER.as_mut_slice() };
+    let memory_block = MemoryBlock::new(
+        aligned_buffer,
+        MemoryPermission::None,
+        MemoryPermission::ReadWrite,
+    )
+    .expect("");
+    httpc_init(memory_block).expect("HTTPC did not init");
+
     log::debug("\n\nStarted!");
+
     let router = FriendSysmodule::new();
 
     let services = vec![
@@ -284,22 +225,25 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
     notification_manger
         .subscribe(
-            ptm::NotificationId::SleepRequested,
-            handle_sleep_notification,
-        )
-        .unwrap();
-    notification_manger
-        .subscribe(ptm::NotificationId::GoingToSleep, handle_sleep_notification)
-        .unwrap();
-    notification_manger
-        .subscribe(
-            ptm::NotificationId::FullyWakingUp,
+            ptm_sysm::NotificationId::SleepRequested,
             handle_sleep_notification,
         )
         .unwrap();
     notification_manger
         .subscribe(
-            ptm::NotificationId::Termination,
+            ptm_sysm::NotificationId::GoingToSleep,
+            handle_sleep_notification,
+        )
+        .unwrap();
+    notification_manger
+        .subscribe(
+            ptm_sysm::NotificationId::FullyWakingUp,
+            handle_sleep_notification,
+        )
+        .unwrap();
+    notification_manger
+        .subscribe(
+            ptm_sysm::NotificationId::Termination,
             handle_termination_notification,
         )
         .unwrap();
@@ -312,6 +256,4 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
     let mut manager = ServiceManager::new(services, notification_manger, router);
     log::debug("Set up service manager");
     manager.run().unwrap();
-
-    svc::exit_process();
 }

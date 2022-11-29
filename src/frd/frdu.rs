@@ -9,7 +9,7 @@ use crate::{
     },
     FriendSysmodule,
 };
-use alloc::{vec, vec::Vec};
+use alloc::{str, vec, vec::Vec};
 use core::{cmp::min, convert::From};
 use ctr::{
     ctr_method,
@@ -18,11 +18,11 @@ use ctr::{
         FriendProfile, GameKey, Mii, ScrambledFriendCode, ScreenName, TrivialCharacterSet,
     },
     ipc::{BufferRights, Command, CurrentProcessId, Handles, PermissionBuffer, StaticBuffer},
-    result::{CtrResult, GenericResultCode},
+    result::CtrResult,
     svc,
     sysmodule::server::Service,
     time::calculate_time_difference_from_now,
-    utils::{cstring::parse_null_terminated_str, parse::str_from_utf8},
+    utils::cstring::parse_null_terminated_str,
 };
 use no_std_io::{Cursor, EndianRead, EndianWrite, StreamContainer, StreamWriter};
 use num_enum::{FromPrimitive, IntoPrimitive};
@@ -256,8 +256,8 @@ fn get_my_comment(server: &mut FriendSysmodule, _session_index: usize) -> CtrRes
 #[ctr_method(cmd = "FrdUCommand::GetMyPassword", normal = 0x1, translate = 0x2)]
 #[ctr_method(cmd = "FrdACommand::GetMyPassword", normal = 0x1, translate = 0x2)]
 fn get_my_password(server: &mut FriendSysmodule, session_index: usize) -> CtrResult<StaticBuffer> {
-    let c_password = cstr_core::CString::new(server.context.account_config.nex_password.as_bytes())
-        .map_err(|_| GenericResultCode::InvalidString)?;
+    let c_password =
+        cstr_core::CString::new(server.context.account_config.nex_password.as_bytes())?;
     let c_password_bytes = c_password.to_bytes_with_nul();
 
     let static_buffer = server
@@ -1017,7 +1017,7 @@ fn request_game_authentication(
     request.download_data_into_buffer(&mut buffer)?;
 
     let response_status_code = request.get_response_status_code()?;
-    let buffer_str = str_from_utf8(&buffer)?
+    let buffer_str = str::from_utf8(&buffer)?
         .trim_end_matches(char::from(0))
         .trim_end_matches("\r\n");
 
@@ -1102,7 +1102,7 @@ fn request_service_locator(
     request.download_data_into_buffer(&mut buffer)?;
 
     let response_status_code = request.get_response_status_code()?;
-    let buffer_str = str_from_utf8(&buffer)?
+    let buffer_str = str::from_utf8(&buffer)?
         .trim_end_matches(char::from(0))
         .trim_end_matches("\r\n");
 
