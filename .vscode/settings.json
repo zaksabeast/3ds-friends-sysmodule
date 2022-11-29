@@ -1,7 +1,6 @@
 {
-  "rust-analyzer.cargo.target": "3ds.json",
+  "rust-analyzer.cargo.target": "armv6k-nintendo-3ds",
   "rust-analyzer.checkOnSave.allTargets": false,
-  "rust-analyzer.inlayHints.enable": true,
   "files.associations": {
     "iostream": "cpp"
   }

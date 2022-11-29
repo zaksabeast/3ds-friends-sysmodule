@@ -93,7 +93,7 @@ Thanks to these projects, teams, and individuals for being great resources:
 - [Luma3DS](https://github.com/LumaTeam/Luma3DS) and [Wumiibo](https://github.com/hax0kartik/wumiibo) for being great references (build processes, double check my reverse engineering, etc.)
 - [libctru](https://github.com/devkitPro/libctru/) for being a great reference and providing an easy way to make open source hombrew
 - [3dbrew](https://www.3dbrew.org/) for documentation about how different parts of the 3ds works
-- [The rust3ds team](https://github.com/rust3ds) for the 3ds.json, initial ctru_sys, and code references to help get rust working on the 3ds
+- [The rust3ds team](https://github.com/rust3ds) for ctru_sys, and code references to help get rust working on the 3ds
 - [devkitPro](https://github.com/devkitPro/) for their toolchain
 - Kinnay for their [online play documentation](https://github.com/kinnay/NintendoClients/wiki)
 - All 3ds researchers

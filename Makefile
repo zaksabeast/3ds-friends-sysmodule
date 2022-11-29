@@ -2,7 +2,7 @@ CRATE_NAME	= friends_sysmodule
 
 CARGO_BUILD_FLAGS = -Z build-std=core,alloc
 
-RUST_OUT_DIR	=	target/3ds
+RUST_OUT_DIR	=	target/armv6k-nintendo-3ds
 RUST_RELEASE_DIR	=	$(RUST_OUT_DIR)/release
 RUST_DEBUG_DIR	=	$(RUST_OUT_DIR)/debug
 
@@ -27,7 +27,7 @@ docs:
 
 # Nightly and unstable options prevent clippy from linting dependencies - https://github.com/rust-lang/rust-clippy/issues/1066
 lint:
-	@cargo +nightly clippy -Zunstable-options $(CARGO_BUILD_FLAGS) --target 3ds.json
+	@cargo +nightly clippy -Zunstable-options $(CARGO_BUILD_FLAGS) --target armv6k-nintendo-3ds
 
 test:
 	@cargo test
@@ -53,10 +53,10 @@ $(DEBUG_CXI) : $(DEBUG_ELF)
 	@makerom -f ncch -rsf friends-debug.rsf -o $@ -elf $<
 
 $(RELEASE_ELF) : $(SOURCES)
-	@cargo build --release $(CARGO_BUILD_FLAGS) --target 3ds.json
+	@cargo build --release $(CARGO_BUILD_FLAGS) --target armv6k-nintendo-3ds
 
 $(DEBUG_ELF) : $(SOURCES)
-	@cargo build $(CARGO_BUILD_FLAGS) --target 3ds.json
+	@cargo build $(CARGO_BUILD_FLAGS) --target armv6k-nintendo-3ds
 
 clean:
 	@rm -rf $(OUT_DIR)
